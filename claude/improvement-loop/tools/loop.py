@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import datetime as dt
 import hashlib
 import json
@@ -8,11 +9,14 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import guard
 import ledger
 from guard import REAL_HOME, REPO, STATE, Refused, git
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 HOMES = STATE / "homes"
 CURRENT = STATE / "home"
@@ -270,29 +274,30 @@ def cmd_decide(args: argparse.Namespace) -> int:
     reports = ledger.reports_to_commit(
         {"quick_result": args.quick_result}, changed=changed_files(), root=REPO
     )
-    entry = ledger.record(
-        {
-            "id": args.attempt,
-            "quick_result": args.quick_result,
-            "built": True,
-            "validation": {
-                "report": seen["report"],
-                "head": report["head"],
-                "tools_sha256": report["tools_sha256"],
-                "champion": report["champion"],
-                "candidate": candidates[0],
-                "overlap": found["overlap"],
-                "rung": found["rung"],
+    with unwritten_if_refused(ledger.LEDGER):
+        entry = ledger.record(
+            {
+                "id": args.attempt,
+                "quick_result": args.quick_result,
+                "built": True,
+                "validation": {
+                    "report": seen["report"],
+                    "head": report["head"],
+                    "tools_sha256": report["tools_sha256"],
+                    "champion": report["champion"],
+                    "candidate": candidates[0],
+                    "overlap": found["overlap"],
+                    "rung": found["rung"],
+                },
+                "guardrails": {"checks": found["checks"], "flags": found["flags"]},
+                "decision": found["decision"],
+                "reason": args.reason,
             },
-            "guardrails": {"checks": found["checks"], "flags": found["flags"]},
-            "decision": found["decision"],
-            "reason": args.reason,
-        },
-        head=head(),
-        registered_in=registered_in(args.attempt),
-        decided=True,
-    )
-    commit([rel(ledger.LEDGER), *reports], f"Loop: {entry['id']} {entry['decision']}")
+            head=head(),
+            registered_in=registered_in(args.attempt),
+            decided=True,
+        )
+        commit([rel(ledger.LEDGER), *reports], f"Loop: {entry['id']} {entry['decision']}")
     say(json.dumps(found, indent=1, ensure_ascii=False))
     return 0
 
@@ -301,9 +306,10 @@ def cmd_bars(args: argparse.Namespace) -> int:
     rows = json.loads(Path(args.file).read_text())
     if not isinstance(rows, list) or not rows:
         raise Refused(f"{args.file}: expected a list of {{track, name, value}}")
-    for row in rows:
-        ledger.bar({**row, "reason": args.reason})
-    commit([rel(ledger.BARS)], f"Loop: {len(rows)} bars: {args.reason[:60]}")
+    with unwritten_if_refused(ledger.BARS):
+        for row in rows:
+            ledger.bar({**row, "reason": args.reason})
+        commit([rel(ledger.BARS)], f"Loop: {len(rows)} bars: {args.reason[:60]}")
     return 0
 
 
@@ -485,6 +491,25 @@ def cmd_commit(args: argparse.Namespace) -> int:
     return 0
 
 
+def repo_head(path: Path) -> str:
+    public, _ = split_private([rel(path)])
+    run = git if public else guard.private_git
+    return run("rev-parse", "HEAD").strip()
+
+
+@contextlib.contextmanager
+def unwritten_if_refused(path: Path) -> Iterator[None]:
+    size = path.stat().st_size if path.exists() else 0
+    before = repo_head(path)
+    try:
+        yield
+    except BaseException:
+        if path.exists() and repo_head(path) == before:
+            with path.open("r+b") as handle:
+                handle.truncate(size)
+        raise
+
+
 def head() -> str:
     return git("rev-parse", "--short", "HEAD").strip()
 
@@ -497,8 +522,11 @@ def read_json(path: str) -> dict[str, Any]:
 
 
 def cmd_register(args: argparse.Namespace) -> int:
-    entry = ledger.register(read_json(args.file), head=head())
-    commit([rel(ledger.REGISTRATIONS)], f"Loop: register {entry['id']}: {entry['hypothesis'][:60]}")
+    with unwritten_if_refused(ledger.REGISTRATIONS):
+        entry = ledger.register(read_json(args.file), head=head())
+        commit(
+            [rel(ledger.REGISTRATIONS)], f"Loop: register {entry['id']}: {entry['hypothesis'][:60]}"
+        )
     say(json.dumps(entry, indent=1, ensure_ascii=False))
     return 0
 
@@ -514,18 +542,20 @@ def registered_in(attempt: str) -> str:
 def cmd_record(args: argparse.Namespace) -> int:
     row = read_json(args.file)
     reports = ledger.reports_to_commit(row, changed=changed_files(), root=REPO)
-    entry = ledger.record(row, head=head(), registered_in=registered_in(str(row.get("id"))))
-    commit([rel(ledger.LEDGER), *reports], f"Loop: {entry['id']} {entry['decision']}")
+    with unwritten_if_refused(ledger.LEDGER):
+        entry = ledger.record(row, head=head(), registered_in=registered_in(str(row.get("id"))))
+        commit([rel(ledger.LEDGER), *reports], f"Loop: {entry['id']} {entry['decision']}")
     say(json.dumps(entry, indent=1, ensure_ascii=False))
     return 0
 
 
 def cmd_bar(args: argparse.Namespace) -> int:
     value: Any = json.loads(args.value) if args.value[:1] in "[{0123456789-.tfn" else args.value
-    entry = ledger.bar(
-        {"track": args.track, "name": args.name, "value": value, "reason": args.reason}
-    )
-    commit([rel(ledger.BARS)], f"Loop: {args.track} bar {args.name} = {args.value}")
+    with unwritten_if_refused(ledger.BARS):
+        entry = ledger.bar(
+            {"track": args.track, "name": args.name, "value": value, "reason": args.reason}
+        )
+        commit([rel(ledger.BARS)], f"Loop: {args.track} bar {args.name} = {args.value}")
     say(json.dumps(entry, ensure_ascii=False))
     return 0
 

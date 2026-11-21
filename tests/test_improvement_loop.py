@@ -520,6 +520,26 @@ def test_changed_splits_are_found(books: Path) -> None:
     assert ledger.verify_splits() == ["a.json"]
 
 
+@pytest.mark.parametrize(("moved", "left"), [(False, "a\n"), (True, "a\nb\n")])
+def test_a_row_stays_only_if_its_commit_happened(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, moved: bool, left: str
+) -> None:
+    books = tmp_path / "registrations.jsonl"
+    books.write_text("a\n")
+    heads = iter(["h1", "h2" if moved else "h1"])
+    monkeypatch.setattr(loop, "repo_head", lambda _: next(heads))
+
+    def refused_after_appending() -> None:
+        with loop.unwritten_if_refused(books):
+            with books.open("a") as handle:
+                handle.write("b\n")
+            raise guard.Refused("checks failed; nothing committed")
+
+    with pytest.raises(guard.Refused):
+        refused_after_appending()
+    assert books.read_text() == left
+
+
 def test_a_split_the_shell_cannot_open_is_refused_with_what_to_do(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

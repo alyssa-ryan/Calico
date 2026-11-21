@@ -1,0 +1,10 @@
+track = "strongest-yours"
+name = "y-keep25"
+task = "best"
+template = "yours"
+
+[options]
+
+[taste]
+l2 = 1000.0
+keep = 0.25

@@ -1,0 +1,11 @@
+track = "strongest-yours"
+name = "y-keep50s1"
+task = "best"
+template = "yours"
+
+[options]
+
+[taste]
+l2 = 1000.0
+keep = 0.5
+keep_seed = 1

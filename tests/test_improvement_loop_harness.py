@@ -30,6 +30,7 @@ sys.path.insert(0, str(TOOLS))
 import catalogue  # noqa: E402
 import disagreement  # noqa: E402
 import harness  # noqa: E402
+import lookalike_coverage  # noqa: E402
 import summarize  # noqa: E402
 import verdict  # noqa: E402
 
@@ -508,3 +509,31 @@ def test_a_share_the_harness_cannot_keep_stops_the_fit(
 ) -> None:
     with pytest.raises(SystemExit, match="keep"):
         fitted_on(world, taste)
+
+
+def test_a_pick_takes_the_label_of_its_nearest_rated_twin_only() -> None:
+    unit = np.array([[1.0, 0.0], [0.999, 0.045], [0.93, 0.368], [0.93, -0.368], [0.0, 1.0]])
+    unit /= np.linalg.norm(unit, axis=1, keepdims=True)
+    captured = np.array([0.0, 9e6, 60.0, 5000.0, 30.0])
+    rated = np.array([1, 2, 3, 4])
+    same = lookalike_coverage.twin_of(0, rated, unit, captured)
+    assert same is not None
+    assert same[0] == 1
+    burst = lookalike_coverage.twin_of(0, np.array([2, 3, 4]), unit, captured)
+    assert burst is not None
+    assert burst[0] == 2
+    assert lookalike_coverage.twin_of(0, np.array([3, 4]), unit, captured) is None
+
+
+def test_the_two_arms_are_the_photos_only_one_list_shows() -> None:
+    report = {
+        "champion": "a",
+        "results": {
+            "a": {"place@12": [{"unit": "Mill", "pick_rows": [1, 2, 3]}]},
+            "b": {"place@12": [{"unit": "Mill", "pick_rows": [2, 3, 4]}]},
+        },
+    }
+    assert lookalike_coverage.arms(report, "b", "place@12") == {
+        "champion": [("Mill", 1)],
+        "candidate": [("Mill", 4)],
+    }

@@ -478,3 +478,33 @@ def test_the_photos_to_rate_are_the_unrated_ones_only_one_list_shows() -> None:
     }
     rows = disagreement.only_one_list(report, "b", "place@50")
     assert sorted((r["row"], r["arm"]) for r in rows) == [(1, "champion"), (4, "candidate")]
+
+
+def fitted_on(world: harness.World, taste: dict[str, Any]) -> Any:
+    asked = dataclasses.replace(YOURS, taste={"l2": 1000.0, **taste})
+    return harness.Fits(world, asked, "validation", {}).without({-1})
+
+
+def test_yours_can_learn_from_a_share_of_its_photos(world: harness.World) -> None:
+    """``[taste] keep`` fits Yours on a seeded share of its ratings, for a learning curve;
+    at 1 it is today's fit."""
+    whole = fitted_on(world, {})
+    assert fitted_on(world, {"keep": 1.0}).rated == whole.rated
+    half = fitted_on(world, {"keep": 0.5, "keep_seed": 3})
+    assert half.rated == round(whole.rated / 2)
+    assert fitted_on(world, {"keep": 0.5, "keep_seed": 3}).coef.tolist() == half.coef.tolist()
+
+
+def test_yours_can_learn_from_a_share_of_its_places(world: harness.World) -> None:
+    whole = fitted_on(world, {})
+    some = fitted_on(world, {"keep": 0.5, "keep_by": "place", "keep_seed": 1})
+    assert set(some.places) < set(whole.places)
+    assert len(some.places) == round(len(whole.places) / 2)
+
+
+@pytest.mark.parametrize("taste", [{"keep": 0.0}, {"keep": 1.5}, {"keep_by": "visit"}])
+def test_a_share_the_harness_cannot_keep_stops_the_fit(
+    world: harness.World, taste: dict[str, Any]
+) -> None:
+    with pytest.raises(SystemExit, match="keep"):
+        fitted_on(world, taste)

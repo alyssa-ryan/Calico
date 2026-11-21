@@ -417,10 +417,29 @@ def laion_scores(world: World, config: Config, what: str) -> np.ndarray:
     return scores
 
 
+def kept_share(config: Config, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    keep = float(config.taste.get("keep", 1.0))
+    by = str(config.taste.get("keep_by", "photo"))
+    if not 0.0 < keep <= 1.0 or by not in ("photo", "place"):
+        raise SystemExit(
+            f"{config.name}: [taste] keep = {keep}, keep_by = {by!r}; keep is in (0, 1] "
+            "and keep_by is 'photo' or 'place'"
+        )
+    if keep == 1.0:
+        return rows
+    rng = np.random.default_rng(int(config.taste.get("keep_seed", 0)))
+    if by == "place":
+        places = sorted({str(r["place"]) for r in rows})
+        chosen = set(rng.permutation(places)[: round(keep * len(places))].tolist())
+        return [r for r in rows if r["place"] in chosen]
+    picked = sorted(rng.permutation(len(rows))[: round(keep * len(rows))].tolist())
+    return [rows[i] for i in picked]
+
+
 def taste_for(world: World, config: Config, ratings: list[dict[str, Any]]) -> Any:
     cat = world.cat
     vectors, extractor = taste_vectors(world, str(config.taste.get("embedder", "")))
-    rows = [r for r in ratings if r["key"] in cat.row]
+    rows = kept_share(config, [r for r in ratings if r["key"] in cat.row])
     at = [cat.row[r["key"]] for r in rows]
     x = vectors[at]
     y = np.array([int(r["liked"]) for r in rows])

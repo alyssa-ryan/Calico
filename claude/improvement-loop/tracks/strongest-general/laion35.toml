@@ -1,0 +1,10 @@
+track = "strongest-general"
+name = "g-laion35"
+task = "best"
+template = "general"
+
+[options]
+
+[models]
+aesthetic = "laion"
+share = 0.35

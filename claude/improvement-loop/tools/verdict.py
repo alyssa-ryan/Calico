@@ -20,8 +20,8 @@ KINDS = (("auc_close_up", 1), ("auc_portrait", 1))
 RULES = {
     "strongest-yours": Rule((("precision", 1),), (("repeat_excess", -1),), KINDS, "precision"),
     "strongest-general": Rule(
-        (("kept_auc", 1),),
-        (("repeat_excess", -1), ("precision", 1), ("kept_lift", 1), ("laion_pct", 1)),
+        (("precision", 1),),
+        (("kept_auc", 1), ("repeat_excess", -1), ("kept_lift", 1), ("laion_pct", 1)),
         KINDS,
         "kept_lift",
     ),

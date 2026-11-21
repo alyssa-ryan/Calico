@@ -734,17 +734,37 @@ GENERAL_LADDER = [
 ]
 
 
-def general(laion: dict[str, Any] | None) -> dict[str, Any]:
+def general(laion: dict[str, Any] | None, **over: Any) -> dict[str, Any]:
     still = measured(0.0, -0.01, 0.01)
     paired = {
-        "kept_auc": measured(0.05, 0.02, 0.08),
+        "kept_auc": still,
         "repeat_excess": still,
-        "precision": still,
+        "precision": measured(0.05, 0.02, 0.08),
         "kept_lift": still,
         "seconds": {"champion": 10.0, "candidate": 10.0},
         "overlap": 0.6,
+        **over,
     }
     return paired if laion is None else {**paired, "laion_pct": laion}
+
+
+HELD = measured(0.0, -0.01, 0.01)
+
+
+def test_general_passes_on_your_precision_while_kept_ranking_holds() -> None:
+    got = verdict.decide("strongest-general", general(HELD), GENERAL_LADDER)
+    assert got["decision"] == "pass"
+    assert [c["measure"] for c in got["checks"] if c["check"] == "gain"] == ["precision"]
+
+
+def test_general_no_longer_passes_on_kept_ranking_alone() -> None:
+    kept_only = general(HELD, kept_auc=measured(0.05, 0.02, 0.08), precision=HELD)
+    assert verdict.decide("strongest-general", kept_only, GENERAL_LADDER)["decision"] == "fail"
+
+
+def test_general_may_not_rank_kept_originals_lower() -> None:
+    lower = general(HELD, kept_auc=measured(-0.05, -0.07, -0.03))
+    assert verdict.decide("strongest-general", lower, GENERAL_LADDER)["decision"] == "fail"
 
 
 def test_general_may_not_pick_what_laion_ranks_lower() -> None:

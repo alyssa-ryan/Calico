@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import guard
 import ledger
+import lock
 from guard import REAL_HOME, REPO, STATE, Refused, git
 
 if TYPE_CHECKING:
@@ -168,6 +169,14 @@ def look(
         )
     kind = "null" if nulls else "look"
     n = 0 if nulls else ledger.may_look(track, tier, attempt, final=final)
+    if not nulls and tier == "validation" and attempt:
+        lock.refuse_stale(
+            registered=lock.at(ledger.registration(attempt)["head"]),
+            ladder=ledger.ladder_measures(track, tier),
+            current=lock.now(),
+            track=track,
+            tier=tier,
+        )
     epoch = int(ledger.bars()[track].get("validation_epoch", 1))
     name = "nulls" if nulls else f"look{n}"
     out = guard.LOOP / "reports" / track / tier / f"{stamp()}-{name}.json.gz"
@@ -218,13 +227,10 @@ def cmd_null(args: argparse.Namespace) -> int:
     name = ledger.ladder_name(args.tier)
     out = look(args.track, args.tier, None, [], nulls=args.sigmas, seeds=args.seeds)
     rungs = summarize.ladder(summarize.read_report(out))
+    reason = f"nulls of the champion on {args.tier}: {rel(out)}"
+    ledger.bar({"track": args.track, "name": name, "value": rungs, "reason": reason})
     ledger.bar(
-        {
-            "track": args.track,
-            "name": name,
-            "value": rungs,
-            "reason": f"nulls of the champion on {args.tier}: {rel(out)}",
-        }
+        {"track": args.track, "name": f"{name}_measures", "value": lock.now(), "reason": reason}
     )
     commit(
         [rel(out), rel(ledger.LOOKS), rel(ledger.BARS)],
@@ -245,6 +251,13 @@ def cmd_quick(args: argparse.Namespace) -> int:
     if args.candidate not in report["configs"] or args.candidate == report["champion"]:
         raise Refused(f"{args.candidate} is not a candidate in {args.report}")
     paired = summarize.paired(report, report["champion"], args.candidate)
+    lock.refuse_stale(
+        registered=None,
+        ladder=ledger.ladder_measures(report["track"], "dev"),
+        current=lock.now(),
+        track=report["track"],
+        tier="dev",
+    )
     try:
         found = verdict.decide(report["track"], paired, ledger.ladder(report["track"], "dev"))
     except verdict.NoBarError as exc:
@@ -431,6 +444,11 @@ def commit(paths: list[str], message: str, *, push_after: bool = True) -> str:
     if missing:
         raise Refused(f"no change to commit in {missing}")
     plan = guard.check_commit_paths(chosen, guard.owner_entries())
+    lock.refuse_change(
+        lock.at("HEAD"),
+        lock.with_files("HEAD", chosen),
+        [a for track in guard.TRACKS for a in ledger.open_attempts(track)],
+    )
     public, private = split_private(chosen)
     before = digests(chosen)
     run_checks(plan.scope)

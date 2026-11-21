@@ -17,8 +17,10 @@ sys.path.insert(0, str(TOOLS))
 import guard  # noqa: E402
 import ledger  # noqa: E402
 import list_answers  # noqa: E402
+import lock  # noqa: E402
 import loop  # noqa: E402
 import splits  # noqa: E402
+import summarize  # noqa: E402
 import verdict  # noqa: E402
 
 TRACK = "strongest-yours"
@@ -899,3 +901,130 @@ def test_a_closing_row_commits_the_dev_reports_it_names_that_are_not_committed(
     gone = {"quick_result": "reports/story-yours/dev/gone.json.gz"}
     with pytest.raises(guard.Refused, match="do not exist"):
         ledger.reports_to_commit(gone, changed=changed, root=tmp_path)
+
+
+def measured_sources(**over: str) -> dict[str, str]:
+    harness = "\n\n".join(f"def {name}():\n    return 1" for name in lock.MEASURES_IN_HARNESS)
+    files = {name: f"# {name}" for name in lock.MEASURE_FILES}
+    return {**files, lock.HARNESS: harness + "\n\ndef taste_for():\n    return 0\n", **over}
+
+
+def test_the_measures_digest_moves_with_a_measure_and_not_with_an_option() -> None:
+    base = measured_sources()
+    same = lock.digest(base.__getitem__)
+    option = {**base, lock.HARNESS: base[lock.HARNESS].replace("return 0", "return 2")}
+    assert lock.digest(option.__getitem__) == same
+    measure = {
+        **base,
+        lock.HARNESS: base[lock.HARNESS].replace(
+            "def auc():\n    return 1", "def auc():\n    return 9"
+        ),
+    }
+    assert lock.digest(measure.__getitem__) != same
+    summary = {**base, "tools/summarize.py": "# changed"}
+    assert lock.digest(summary.__getitem__) != same
+
+
+def test_a_measure_the_lock_names_cannot_quietly_disappear() -> None:
+    base = measured_sources()
+    gone = {**base, lock.HARNESS: base[lock.HARNESS].replace("def auc():", "def area():")}
+    with pytest.raises(guard.Refused, match="auc"):
+        lock.digest(gone.__getitem__)
+
+
+def test_measures_change_only_while_no_attempt_is_open() -> None:
+    lock.refuse_change("a", "a", ["strongest-general-007"])
+    lock.refuse_change("a", "b", [])
+    with pytest.raises(guard.Refused, match="before its attempt is registered"):
+        lock.refuse_change("a", "b", ["strongest-general-007"])
+
+
+def test_a_look_needs_the_measures_its_attempt_and_its_ladder_were_made_with() -> None:
+    ok = {"track": TRACK, "tier": "validation", "current": "m"}
+    lock.refuse_stale(registered="m", ladder="m", **ok)
+    with pytest.raises(guard.Refused, match="since this attempt was registered"):
+        lock.refuse_stale(registered="old", ladder="m", **ok)
+    with pytest.raises(guard.Refused, match=f"loop null {TRACK}`"):
+        lock.refuse_stale(registered="m", ladder="old", **ok)
+    with pytest.raises(guard.Refused, match="--tier dev"):
+        lock.refuse_stale(registered=None, ladder="old", track=TRACK, tier="dev", current="m")
+
+
+def test_a_ladder_made_before_the_lock_counts_while_the_measures_are_unchanged() -> None:
+    lock.refuse_stale(
+        registered=None, ladder=None, current=lock.BEFORE_LOCK, track=TRACK, tier="validation"
+    )
+    with pytest.raises(guard.Refused, match="loop null"):
+        lock.refuse_stale(
+            registered=None, ladder=None, current="changed", track=TRACK, tier="validation"
+        )
+
+
+def test_a_look_is_refused_before_validation_opens_when_the_measures_moved(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(guard, "require_branch", lambda: None)
+    monkeypatch.setattr(ledger, "verify_splits", list)
+    monkeypatch.setattr(loop, "uncommitted", list)
+    monkeypatch.setattr(ledger, "may_look", lambda *a, **k: 1)
+    monkeypatch.setattr(ledger, "registration", lambda _: {"head": "abc"})
+    monkeypatch.setattr(ledger, "ladder_measures", lambda *a: "new")
+    monkeypatch.setattr(lock, "at", lambda _: "old")
+    monkeypatch.setattr(lock, "now", lambda: "new")
+
+    def opened(*_: object, **__: object) -> int:
+        raise AssertionError("validation was opened")
+
+    monkeypatch.setattr(loop, "run_sandboxed", opened)
+    with pytest.raises(guard.Refused, match="since this attempt was registered"):
+        loop.look(TRACK, "validation", "strongest-yours-008", ["x"])
+
+
+def test_a_measure_change_is_not_committed_while_an_attempt_is_open(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "owner-entries.json").write_text("[]")
+    monkeypatch.setattr(loop, "STATE", tmp_path)
+    monkeypatch.setattr(guard, "require_branch", lambda: None)
+    monkeypatch.setattr(loop, "git", lambda *a, **k: "")
+    monkeypatch.setattr(guard, "owner_entries", set)
+    monkeypatch.setattr(
+        loop, "changed_files", lambda: ["claude/improvement-loop/tools/summarize.py"]
+    )
+    monkeypatch.setattr(ledger, "open_attempts", lambda track: [f"{track}-009"])
+    monkeypatch.setattr(lock, "at", lambda _: "before")
+    monkeypatch.setattr(lock, "with_files", lambda *_: "after")
+
+    def checked(_: str) -> None:
+        raise AssertionError("the checks ran")
+
+    monkeypatch.setattr(loop, "run_checks", checked)
+    with pytest.raises(guard.Refused, match="changes the measures"):
+        loop.commit(["claude/improvement-loop/tools/summarize.py"], "m")
+
+
+def test_a_null_ladder_is_stamped_with_the_measures_it_was_made_with(
+    books: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(loop, "look", lambda *a, **k: books / "r.json.gz")
+    monkeypatch.setattr(summarize, "read_report", lambda _: {})
+    monkeypatch.setattr(summarize, "ladder", lambda _: [{"sigma": 0.1}])
+    monkeypatch.setattr(lock, "now", lambda: "m1")
+    monkeypatch.setattr(loop, "commit", lambda *a, **k: "h")
+    monkeypatch.setattr(loop, "rel", str)
+    args = loop.parser().parse_args(["null", TRACK, "--tier", "dev"])
+    loop.cmd_null(args)
+    assert ledger.ladder_measures(TRACK, "dev") == "m1"
+
+
+def test_a_quick_reading_needs_a_dev_ladder_made_with_todays_measures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    report = {"tier": "dev", "configs": {"g0": {}, "c": {}}, "champion": "g0", "track": TRACK}
+    monkeypatch.setattr(summarize, "read_report", lambda _: report)
+    monkeypatch.setattr(summarize, "paired", lambda *_: {})
+    monkeypatch.setattr(ledger, "ladder_measures", lambda *_: "old")
+    monkeypatch.setattr(lock, "now", lambda: "new")
+    args = loop.parser().parse_args(["quick", "r.json.gz", "--candidate", "c"])
+    with pytest.raises(guard.Refused, match="--tier dev"):
+        loop.cmd_quick(args)

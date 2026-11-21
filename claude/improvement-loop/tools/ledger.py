@@ -178,6 +178,18 @@ def ladder(track: str, tier: str = "validation") -> list[dict[str, Any]]:
     return list(bars()[track].get(ladder_name(tier), []))
 
 
+def ladder_measures(track: str, tier: str = "validation") -> str | None:
+    value = bars()[track].get(f"{ladder_name(tier)}_measures")
+    return None if value is None else str(value)
+
+
+def registration(attempt: str) -> dict[str, Any]:
+    for row in read(REGISTRATIONS):
+        if row["id"] == attempt:
+            return row
+    raise Refused(f"{attempt} was never registered")
+
+
 def may_look(track: str, tier: str, attempt: str | None, *, final: bool = False) -> int:
     if track not in TRACKS:
         raise Refused(f"track {track!r} is not one of {TRACKS}")

@@ -701,7 +701,13 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
-    return int(args.func(args))
+    try:
+        return int(args.func(args))
+    except PermissionError as e:
+        raise guard.Refused(
+            f"cannot open {e.filename}: this shell's own sandbox hides it. "
+            "Run `loop` outside that sandbox; the loop applies its own to every script."
+        ) from e
 
 
 if __name__ == "__main__":

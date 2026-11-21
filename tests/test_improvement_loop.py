@@ -520,6 +520,17 @@ def test_changed_splits_are_found(books: Path) -> None:
     assert ledger.verify_splits() == ["a.json"]
 
 
+def test_a_split_the_shell_cannot_open_is_refused_with_what_to_do(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def hidden(_: object) -> int:
+        raise PermissionError(1, "Operation not permitted", "splits/locked/legacy.json")
+
+    monkeypatch.setattr(loop, "cmd_status", hidden)
+    with pytest.raises(guard.Refused, match=r"splits/locked/legacy\.json.*outside"):
+        loop.main(["status"])
+
+
 def test_the_answers_to_a_list_are_read_for_each_arm_with_an_interval_over_places() -> None:
     """Rate this list: the photos only one of two lists showed, rated blind. The reader
     joins the answers to the arms the loop kept and compares liked ÷ rated."""

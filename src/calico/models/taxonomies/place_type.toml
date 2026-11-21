@@ -1,0 +1,35 @@
+# What kind of place a photo shows. Deliberately generic so it serves any
+# collection; add a personal taxonomy in <calico home>/taxonomies/ for finer
+# distinctions (e.g. "operating_theatre", "boiler_room").
+description = "Type of place"
+version = "1"
+
+[labels.building_exterior]
+prompts = ["the outside of a building", "a building facade"]
+
+[labels.corridor]
+prompts = ["a hallway or corridor", "a long passage inside a building"]
+
+[labels.room]
+prompts = ["the inside of a room", "an indoor living space or office"]
+
+[labels.stairs]
+prompts = ["a staircase", "stairs and a stairwell"]
+
+[labels.large_hall]
+prompts = ["a large hall, auditorium or church interior", "a grand interior with a high ceiling"]
+
+[labels.industrial]
+prompts = ["an industrial space with machinery", "a factory or power plant interior"]
+
+[labels.street]
+prompts = ["a city street", "an urban scene with buildings and roads"]
+
+[labels.nature]
+prompts = ["a natural landscape", "a forest, field or mountains"]
+
+[labels.water]
+prompts = ["a lake, river or seashore", "a waterfront or beach"]
+
+[labels.rooftop]
+prompts = ["a rooftop", "a view from the top of a building"]

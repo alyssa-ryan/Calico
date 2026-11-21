@@ -1,0 +1,59 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux check
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: cd frontend && uv run npm ci
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/torch/hub/checkpoints
+          key: laion-head-${{ runner.os }}-${{ hashFiles('src/calico/features/laion.py') }}
+      - run: make check
+        env:
+          CALICO_HOME: ${{ runner.temp }}/calico-home
+          CALICO_MAX_SKIPPED: 6
+
+  macos:
+    name: macOS check
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: cd frontend && uv run npm ci
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.cache/torch/hub/checkpoints
+          key: laion-head-${{ runner.os }}-${{ hashFiles('src/calico/features/laion.py') }}
+      - run: make check
+        env:
+          CALICO_HOME: ${{ runner.temp }}/calico-home
+          CALICO_MAX_SKIPPED: 2
+          CALICO_DEVICE: cpu

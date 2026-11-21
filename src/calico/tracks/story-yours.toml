@@ -1,0 +1,5 @@
+version = "3"
+
+[options]
+spend_alike = 0.871
+strength_weight = 0.25

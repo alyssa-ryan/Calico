@@ -1,0 +1,56 @@
+# A zero-shot stand-in for "is this a strong photograph". Weak on its own,
+# useful as one signal among several, and the first model worth replacing with
+# one trained on your ratings (register it under the same name: "aesthetic").
+#
+# "document" takes probability away from "strong" for photos that record rather
+# than compose: signs, museum labels, pages, screenshots. Version 1 knew only blur
+# and bad framing, so a sharp, evenly lit placard scored as strong. On the 1,022
+# taste ratings (15 places) General's strength AUC went 0.755 -> 0.771, no place
+# worse by more than 0.01; these words added to "weak" instead scored 0.776 but
+# cost three places 0.03-0.04 (an average of six weak prompts blurs them).
+#
+# Version 3 adds a striking portrait to "strong": photos with a person or animal in
+# them ranked below the rest (median percentile 0.41 against 0.52), though some are both
+# strong photographs and the anchors of your stories (A, B, E, I, K, M, Q, V, X). On 782
+# taste and Compare ratings at 33 places (27 October 2026): AUC 0.769 -> 0.773 overall,
+# 0.734 -> 0.773 among photos with a person or animal, 0.762 -> 0.764 without; they now
+# rank like the rest (0.51 against 0.50). Two of 13 places worse by more than 0.01
+# (-0.028 and -0.021). Chosen among five variants on these ratings:
+# two people prompts overshot (0.57 against 0.48, 7 places worse), and animal wording
+# cost one place 0.07, so a raccoon like X's is still read as weak.
+#
+# Version 4 names what the owner saw where General and Yours disagreed most (calico eval
+# disagreements, 7 November 2026): General missed strong architectural geometry, and ranked
+# phone snapshots and reference photos of objects and museum displays above portfolio-
+# worthy photos. One prompt for each. On 1,611 taste and Compare ratings at 32 places,
+# General's strength AUC 0.739 -> 0.777, +0.037 [0.005, 0.078]; each prompt alone gave
+# about +0.01 (eval taste --prompts, docs/experiments/aesthetic/measured/). A best of 41
+# settings tried, so checked once on the hold-out (4 places, 205 ratings): +0.002
+# [-0.030, 0.040], above zero but far smaller, so the size of the gain is not confirmed.
+description = "Photographic strength (zero-shot)"
+version = "4"
+
+[labels.strong]
+prompts = [
+    "a stunning, award-winning photograph",
+    "a beautifully composed professional photograph",
+    "a striking fine-art photograph with great light",
+    "a striking portrait of a person, beautifully lit",
+    "a photograph of architecture with strong geometry and symmetry",
+]
+
+[labels.weak]
+prompts = [
+    "a blurry, poorly composed snapshot",
+    "a boring, badly framed photo",
+    "an accidental photo with bad exposure",
+    "a casual smartphone snapshot",
+]
+
+[labels.document]
+prompts = [
+    "a photo of a sign, a label or a page of text",
+    "a snapshot of a museum exhibit or an information panel",
+    "a screenshot of a phone screen",
+    "a reference photo of an object or a museum display case",
+]

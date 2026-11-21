@@ -1,0 +1,6 @@
+track = "strongest-general"
+name = "g0"
+task = "best"
+template = "general"
+
+[options]

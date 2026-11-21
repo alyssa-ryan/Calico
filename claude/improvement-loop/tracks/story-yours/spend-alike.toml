@@ -1,0 +1,10 @@
+track = "story-yours"
+name = "sy1"
+task = "triptych"
+template = "yours"
+
+[options]
+spend_alike = 0.871
+
+[taste]
+l2 = 1000.0

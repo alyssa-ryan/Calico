@@ -1,0 +1,20 @@
+# Whether a living subject, a person or an animal, is in the photo, however small. Your
+# anchors (27 October 2026): 11 of 28 hold one, and in 17 the anchor is the likeliest of
+# its three to; Calico's strength ranks such photos lower (median percentile 0.36-0.40
+# against 0.53-0.54), so telling stories by roles reads it apart from strength.
+description = "A person or animal in the scene, or none"
+version = "1"
+
+[labels.living]
+prompts = [
+    "a photo with a person in it",
+    "a person standing in an abandoned building",
+    "an animal in the scene",
+]
+
+[labels.none]
+prompts = [
+    "an empty place with no people or animals",
+    "an abandoned interior with nobody in it",
+    "a close-up of an object or a surface",
+]

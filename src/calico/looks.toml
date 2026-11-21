@@ -1,0 +1,44 @@
+# Words for how a photo *looks* -- its light, colour and mood -- answered by measuring
+# the photo instead of by CLIP, which reads these words poorly. Each look names the
+# technical measurements it implies (+1 more, -1 less). The mapping comes from
+# photographic convention, not from tuning: change it here, or override a look by name
+# in <calico home>/looks.toml. Measurements: brightness, contrast, warmth, saturation,
+# colorfulness, highlight_clip, shadow_clip, sharpness.
+description = "Light, colour and mood words"
+version = "1"
+
+[looks."golden hour"]
+words = ["golden hour", "golden light", "magic hour", "sunset light", "sunrise light", "warm light", "warm glow"]
+signals = { warmth = 1, saturation = 1 }
+
+[looks.moody]
+words = ["moody", "brooding", "melancholic", "melancholy", "somber", "sombre", "gloomy", "bleak", "dreary", "ominous"]
+signals = { brightness = -1, saturation = -1 }
+
+[looks.vivid]
+words = ["vivid", "vibrant", "colourful", "colorful", "saturated"]
+signals = { saturation = 1, colorfulness = 1 }
+
+[looks.muted]
+words = ["muted", "faded", "washed out", "desaturated"]
+signals = { saturation = -1 }
+
+[looks.bright]
+words = ["bright", "airy", "high key"]
+signals = { brightness = 1 }
+
+[looks.dim]
+words = ["dim", "low key"]
+signals = { brightness = -1 }
+
+[looks.contrasty]
+words = ["contrasty", "high contrast", "dramatic light", "hard light", "harsh light"]
+signals = { contrast = 1 }
+
+[looks.soft]
+words = ["soft light", "flat light", "diffuse light"]
+signals = { contrast = -1 }
+
+[looks.cool]
+words = ["cool tones", "cold tones"]
+signals = { warmth = -1 }

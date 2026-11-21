@@ -1,0 +1,199 @@
+[project]
+name = "calico"
+version = "0.2.0"
+description = "Pick photographs from an archive: same views over time, three-image stories, and the strongest frames."
+readme = "README.md"
+authors = [{ name = "The Calico authors" }]
+license = "AGPL-3.0-or-later"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "numpy>=2.1",
+    "pillow>=11.0",
+    "pillow-heif>=0.21",
+    "platformdirs>=4.3",
+    "pydantic>=2.9",
+    "python-multipart>=0.0.20",
+    "scipy>=1.18.1",
+    "tomli-w>=1.1",
+    "typer>=0.15",
+    "uvicorn>=0.32",
+]
+
+[project.optional-dependencies]
+# Semantic image/text embeddings (CLIP). Heavy (PyTorch), so opt-in:
+#   uv sync --extra ml
+ml = [
+    "open-clip-torch>=2.29",
+    "timm>=1.0",
+    "torch>=2.5",
+    "transformers>=4.45",
+]
+# RAW files without a JPEG beside them (LibRaw): uv sync --extra raw
+raw = [
+    "rawpy>=0.19",
+]
+
+[project.scripts]
+calico = "calico.cli:app"
+
+# Plugin points. Built-ins register through the same mechanism a third-party
+# package would, so there is exactly one way a task, model or extractor
+# becomes available. See docs/architecture.md, "Extending".
+[project.entry-points."calico.tasks"]
+best = "calico.tasks.best:BestTask"
+same_view = "calico.tasks.same_view:SameViewTask"
+recurring_views = "calico.tasks.recurring_views:RecurringViewsTask"
+triptych = "calico.tasks.triptych:TriptychTask"
+
+[project.entry-points."calico.extractors"]
+technical = "calico.features.technical:TechnicalExtractor"
+layout = "calico.features.layout:LayoutExtractor"
+palette = "calico.features.palette:PaletteExtractor"
+tiny = "calico.features.tiny:TinyEmbedder"
+clip = "calico.features.clip:ClipEmbedder"
+siglip = "calico.features.clip:SiglipEmbedder"
+clip_large = "calico.features.clip:ClipLargeEmbedder"
+dinov2 = "calico.features.dinov2:Dinov2Embedder"
+laion_aesthetic = "calico.features.laion:LaionAestheticExtractor"
+
+# Code-defined models. Zero-shot label models need no code at all: they are
+# TOML vocabularies in src/calico/models/taxonomies/ or <calico home>/taxonomies/.
+[project.entry-points."calico.models"]
+quality = "calico.models.quality:TechnicalQuality"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28",
+    "hypothesis>=6.120",
+    "mypy>=1.13",
+    "nodejs-wheel>=22",
+    "playwright>=1.48",
+    "pre-commit>=4.0",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+    "scipy-stubs>=1.18.1.1",
+]
+# Local development includes CLIP so a plain `uv sync` / `uv add` never strips
+# PyTorch out from under you. CI opts out with `--no-group ml` (it is ~2 GB).
+ml = ["calico[ml]"]
+raw = ["calico[raw]"]
+
+[tool.uv]
+default-groups = ["dev", "ml", "raw"]
+
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/calico"]
+
+# --------------------------------------------------------------------------
+# ruff
+# --------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+# Claude Code's hook scripts: tooling around the project, not Calico code. They print to
+# stderr by design, so Calico's rules (no print, pathlib) do not fit them.
+extend-exclude = [".claude"]
+
+[tool.ruff.lint]
+select = [
+    "F", "E", "W",   # pyflakes, pycodestyle
+    "I",             # import order
+    "UP",            # modern syntax
+    "B",             # bugbear
+    "C4",            # comprehensions
+    "SIM",           # simplifications
+    "RUF",           # ruff-specific
+    "N",             # naming
+    "PT",            # pytest style
+    "PTH",           # pathlib over os.path
+    "S",             # security
+    "T20",           # no print() outside the CLI
+    "TC",            # type-checking-only imports
+    "PL",            # pylint subset
+    "RET", "PIE", "ISC", "TID", "FURB", "PERF", "NPY", "LOG", "G",
+]
+# Moving imports under `if TYPE_CHECKING:` is safe with `from __future__ import annotations`.
+extend-safe-fixes = ["TC"]
+ignore = [
+    "PLR0913",  # many-arguments: keyword-only dataclass-style signatures are fine
+    "PLR2004",  # magic values: thresholds live in named Options fields instead
+    "ISC001",   # conflicts with the formatter
+]
+
+# "×" is used deliberately in evidence output ("0.82×0.20").
+allowed-confusables = ["×"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "PLR2004", "S311"]
+"src/calico/cli.py" = ["T20", "PLR0913", "B008"]
+# The improvement loop's tools: one-off scripts and a guarded runner of fixed commands (git,
+# uv, cp, sandbox-exec), importing heavy modules only where they are used.
+"claude/improvement-loop/**" = ["S603", "S607", "PLC0415", "PLR0912", "PLR0915", "PLR0917"]
+
+[tool.ruff.lint.flake8-type-checking]
+# pydantic evaluates annotations at runtime, so their imports must stay real.
+runtime-evaluated-base-classes = [
+    "pydantic.BaseModel",
+    "calico.domain._Frozen",
+    "calico.tasks.base.TaskOptions",
+]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+# --------------------------------------------------------------------------
+# mypy
+# --------------------------------------------------------------------------
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = [
+    "src",
+    "tests",
+    "scripts",
+    "claude/improvement-loop/tools/guard.py",
+    "claude/improvement-loop/tools/ledger.py",
+    "claude/improvement-loop/tools/loop.py",
+    "claude/improvement-loop/tools/summarize.py",
+    "claude/improvement-loop/tools/verdict.py",
+]
+mypy_path = "claude/improvement-loop/tools"
+plugins = ["pydantic.mypy"]
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = ["open_clip.*", "torch.*", "timm.*", "pillow_heif.*"]
+ignore_missing_imports = true
+
+# --------------------------------------------------------------------------
+# pytest
+# --------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "--strict-config", "-ra"]
+markers = [
+    "ml: needs the `ml` extra (torch + open_clip); skipped when it is not installed",
+    "browser: drives a real Chrome via Playwright; skipped when Chrome is not installed",
+]
+filterwarnings = ["error"]
+
+[tool.coverage.run]
+source = ["calico"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_covered = true
+exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError", "\\.\\.\\."]

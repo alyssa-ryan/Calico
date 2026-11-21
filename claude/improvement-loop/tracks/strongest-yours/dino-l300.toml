@@ -1,0 +1,10 @@
+track = "strongest-yours"
+name = "y-dino-l300"
+task = "best"
+template = "yours"
+
+[options]
+
+[taste]
+l2 = 300.0
+embedder = "dinov2"

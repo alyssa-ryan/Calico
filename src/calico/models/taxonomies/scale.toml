@@ -1,0 +1,44 @@
+# How far the camera is from what it shows, from the air to a macro. Ordered from
+# farthest to nearest, so a photo's expected label position is a scale number
+# (0 aerial ... 4 macro). Kind of shot (shot_kind) says what a photo is about; scale
+# says how near it is, which stories turn on (a wide anchor, a medium and a macro).
+#
+# Written from convention and measured once, unchanged (27 October 2026), on the 66
+# photos of your finished stories your notes give a scale (where a note names two, the
+# one not the anchor's applies to both outer photos): 71% read right and 95% within one
+# step; the median scale number orders your labels (wide 1.04, medium 1.99, close 2.47,
+# macro 3.99). Wide is the commonest miss (8 of 34 read medium); close is the weakest
+# (3 of 8). Drone photos read aerial at most places (87-100% at three large sites),
+# other photos at 1-5%; flights indoors do not.
+description = "Scale of a shot: aerial, wide, medium, close or macro"
+version = "1"
+
+[labels.aerial]
+prompts = [
+    "an aerial photo taken from a drone high above the ground",
+    "a bird's-eye view looking down on buildings and land",
+]
+
+[labels.wide]
+prompts = [
+    "a wide shot showing a whole room, hall or building",
+    "a wide-angle view of a large space from one end",
+]
+
+[labels.medium]
+prompts = [
+    "a medium shot of part of a room: a corner, a doorway or one wall",
+    "a view of a staircase, a window or a few pieces of furniture",
+]
+
+[labels.close]
+prompts = [
+    "a close-up photo of a single object",
+    "a close-up of one fixture, sign or piece of machinery",
+]
+
+[labels.macro]
+prompts = [
+    "an extreme close-up macro photo of a texture",
+    "a macro shot filling the frame with a tiny detail of a surface",
+]

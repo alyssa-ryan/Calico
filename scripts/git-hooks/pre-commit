@@ -1,0 +1,7 @@
+#!/bin/sh
+# Refuse private material before it is committed, then run the format, lint and type hooks.
+set -e
+root="$(git rev-parse --show-toplevel)"
+[ "$(basename "$(git rev-parse --absolute-git-dir)")" = .private.git ] && exit 0
+uv run --no-sync --project "$root" python "$root/scripts/public_check.py" staged
+uv run --no-sync --project "$root" pre-commit run --hook-stage pre-commit

@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+/* Dark mode follows a class on <html> (set before paint in index.html, toggled in the header). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Native controls (scrollbars, number spinners, <details> markers) follow the theme. */
+:root {
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
+}
+
+/* Keep focused or scrolled-to elements clear of the sticky header and the composer's action bar. */
+html {
+  scroll-padding-top: 4.5rem;
+  scroll-padding-bottom: 8rem;
+}
+
+@theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-accent-50: var(--color-teal-50);
+  --color-accent-100: var(--color-teal-100);
+  --color-accent-400: var(--color-teal-400);
+  --color-accent-500: var(--color-teal-500);
+  --color-accent-600: var(--color-teal-600);
+  --color-accent-700: var(--color-teal-700);
+  /* The near-black of the header and footer artwork, so their bands meet it seamlessly. */
+  --color-artwork: #090706;
+}
+
+/* biome-ignore-start lint/complexity/noImportantStyles: reduced motion must beat every component transition */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+/* biome-ignore-end lint/complexity/noImportantStyles: see above */

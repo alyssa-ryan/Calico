@@ -1,0 +1,11 @@
+track = "story-yours"
+name = "sy-sw25"
+task = "triptych"
+template = "yours"
+
+[options]
+spend_alike = 0.871
+strength_weight = 0.25
+
+[taste]
+l2 = 1000.0

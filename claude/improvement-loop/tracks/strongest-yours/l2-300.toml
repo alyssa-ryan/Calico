@@ -1,0 +1,9 @@
+track = "strongest-yours"
+name = "y-l2-300"
+task = "best"
+template = "yours"
+
+[options]
+
+[taste]
+l2 = 300.0

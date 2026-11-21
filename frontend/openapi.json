@@ -1,0 +1,2141 @@
+{
+  "components": {
+    "schemas": {
+      "Body_api_select_api_select_post": {
+        "properties": {
+          "references": {
+            "anyOf": [
+              {
+                "items": {
+                  "contentMediaType": "application/octet-stream",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "References"
+          },
+          "request": {
+            "title": "Request",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request"
+        ],
+        "title": "Body_api_select_api_select_post",
+        "type": "object"
+      },
+      "ChildFolder": {
+        "properties": {
+          "has_children": {
+            "title": "Has Children",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path",
+          "has_children"
+        ],
+        "title": "ChildFolder",
+        "type": "object"
+      },
+      "Evidence": {
+        "additionalProperties": false,
+        "description": "One reason a pick scored as it did.\n\n``value`` is the signal in [0, 1]; ``weight`` is how much it counted. The\npick's score is the sum of ``value * weight`` over its evidence, so the\nevidence list *is* the explanation, not a narrative written beside it.",
+        "properties": {
+          "detail": {
+            "default": "",
+            "title": "Detail",
+            "type": "string"
+          },
+          "signal": {
+            "title": "Signal",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "signal",
+          "value",
+          "weight"
+        ],
+        "title": "Evidence",
+        "type": "object"
+      },
+      "FeedbackBody": {
+        "properties": {
+          "content_key": {
+            "title": "Content Key",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "title": "Note",
+            "type": "string"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "enum": [
+                  -1,
+                  1
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "\ud83d\udc4d 1, \ud83d\udc4e -1, or null to clear it.",
+            "title": "Rating"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "content_key",
+          "rating"
+        ],
+        "title": "FeedbackBody",
+        "type": "object"
+      },
+      "FolderMatch": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path"
+        ],
+        "title": "FolderMatch",
+        "type": "object"
+      },
+      "Group": {
+        "additionalProperties": false,
+        "description": "An ordered set of picks shown together.\n\n``best`` returns one group; ``same_view`` one group per matched view;\n``triptych`` one group of three per story.",
+        "properties": {
+          "evidence": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "marker": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Marker"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the list stops being good. Null when picks carry no probability, or a description reordered them."
+          },
+          "picks": {
+            "items": {
+              "$ref": "#/components/schemas/Pick"
+            },
+            "title": "Picks",
+            "type": "array"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "score",
+          "picks"
+        ],
+        "title": "Group",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Health": {
+        "properties": {
+          "api": {
+            "description": "Fingerprint of this server's API; see calico.web.fingerprint.",
+            "title": "Api",
+            "type": "string"
+          },
+          "engine": {
+            "enum": [
+              "starting",
+              "ready",
+              "error"
+            ],
+            "title": "Engine",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "required": [
+          "engine",
+          "error",
+          "api"
+        ],
+        "title": "Health",
+        "type": "object"
+      },
+      "JobCreated": {
+        "properties": {
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "title": "JobCreated",
+        "type": "object"
+      },
+      "JobStatus": {
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "label_set_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label Set Id"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Run Id"
+          },
+          "status": {
+            "enum": [
+              "starting",
+              "queued",
+              "running",
+              "done",
+              "error"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "step": {
+            "description": "What done and total count: photos read, or compared part by part.",
+            "enum": [
+              "reading",
+              "comparing"
+            ],
+            "title": "Step",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "status",
+          "done",
+          "total",
+          "step",
+          "run_id",
+          "label_set_id",
+          "error"
+        ],
+        "title": "JobStatus",
+        "type": "object"
+      },
+      "JsonValue": {},
+      "LabelBody": {
+        "properties": {
+          "label": {
+            "anyOf": [
+              {
+                "enum": [
+                  0,
+                  1,
+                  2
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "LabelBody",
+        "type": "object"
+      },
+      "LabelKind": {
+        "enum": [
+          "describe",
+          "same_view",
+          "taste",
+          "stories",
+          "compare",
+          "anchor"
+        ],
+        "type": "string"
+      },
+      "LabelPhoto": {
+        "properties": {
+          "content_key": {
+            "title": "Content Key",
+            "type": "string"
+          },
+          "folder": {
+            "title": "Folder",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "enum": [
+                  0,
+                  1,
+                  2
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "content_key",
+          "name",
+          "folder",
+          "label"
+        ],
+        "title": "LabelPhoto",
+        "type": "object"
+      },
+      "LabelSetDetail": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "folders": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Folders",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LabelPhoto"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LabelKind"
+          },
+          "scorer": {
+            "title": "Scorer",
+            "type": "string"
+          },
+          "set_id": {
+            "title": "Set Id",
+            "type": "string"
+          },
+          "stories": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LabelStory"
+            },
+            "title": "Stories",
+            "type": "array"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "set_id",
+          "created_at",
+          "kind",
+          "text",
+          "folders",
+          "scorer",
+          "items"
+        ],
+        "title": "LabelSetDetail",
+        "type": "object"
+      },
+      "LabelSetRequest": {
+        "properties": {
+          "anchor": {
+            "default": false,
+            "description": "Rate whether each photo could anchor a story (could, not sure, could not); no text or reference.",
+            "title": "Anchor",
+            "type": "boolean"
+          },
+          "compare": {
+            "default": false,
+            "description": "Rate the first picks of General and of Yours, merged and shuffled (like, not sure, don't like); no text or reference.",
+            "title": "Compare",
+            "type": "boolean"
+          },
+          "folders": {
+            "items": {
+              "format": "path",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Folders",
+            "type": "array"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "format": "path",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Label photos as the same view as this one, or not.",
+            "title": "Reference"
+          },
+          "stories": {
+            "default": false,
+            "description": "Rate stories told from the folders (works, not sure, doesn't); no text or reference.",
+            "title": "Stories",
+            "type": "boolean"
+          },
+          "taste": {
+            "default": false,
+            "description": "Rate photos for your taste (like, not sure, don't like); no text or reference.",
+            "title": "Taste",
+            "type": "boolean"
+          },
+          "text": {
+            "default": "",
+            "description": "What to look for; unused with a reference.",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "folders"
+        ],
+        "title": "LabelSetRequest",
+        "type": "object"
+      },
+      "LabelSetSummary": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "folders": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Folders",
+            "type": "array"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/LabelKind"
+          },
+          "labelled": {
+            "title": "Labelled",
+            "type": "integer"
+          },
+          "set_id": {
+            "title": "Set Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "set_id",
+          "created_at",
+          "kind",
+          "text",
+          "folders",
+          "total",
+          "labelled"
+        ],
+        "title": "LabelSetSummary",
+        "type": "object"
+      },
+      "LabelStory": {
+        "description": "A story to rate. How it was told (template, variety) stays on the server, so it\ncannot sway the rating.",
+        "properties": {
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "enum": [
+                  0,
+                  1,
+                  2
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/StoryPhotoItem"
+            },
+            "title": "Photos",
+            "type": "array"
+          }
+        },
+        "required": [
+          "index",
+          "photos",
+          "label"
+        ],
+        "title": "LabelStory",
+        "type": "object"
+      },
+      "Marker": {
+        "additionalProperties": false,
+        "description": "Where a list stops being good: the line Yours draws above the first pick you are less\nlikely than ``probability`` to like.",
+        "properties": {
+          "before": {
+            "description": "The picks before this one are at least that likely to be liked and this one is the first that is not (the number of picks when every one is).",
+            "minimum": 0.0,
+            "title": "Before",
+            "type": "integer"
+          },
+          "probability": {
+            "description": "The line: how likely a pick must be.",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Probability",
+            "type": "number"
+          }
+        },
+        "required": [
+          "before",
+          "probability"
+        ],
+        "title": "Marker",
+        "type": "object"
+      },
+      "Pick": {
+        "additionalProperties": false,
+        "description": "One selected photo, with why it was selected.",
+        "properties": {
+          "alternates": {
+            "default": [],
+            "description": "Other frames of the pick's burst, or of its view from other occasions, best first.",
+            "items": {
+              "format": "path",
+              "type": "string"
+            },
+            "title": "Alternates",
+            "type": "array"
+          },
+          "burst_size": {
+            "default": 1,
+            "description": "Frames this pick stands for: itself and its alternates.",
+            "minimum": 1.0,
+            "title": "Burst Size",
+            "type": "integer"
+          },
+          "captured_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Captured At"
+          },
+          "clear_match": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Whether the photo clearly matches the criteria; null when there are none, or the model cannot tell.",
+            "title": "Clear Match"
+          },
+          "content_key": {
+            "title": "Content Key",
+            "type": "string"
+          },
+          "evidence": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Evidence"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "location": {
+            "title": "Location",
+            "type": "string"
+          },
+          "path": {
+            "format": "path",
+            "title": "Path",
+            "type": "string"
+          },
+          "probability": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How likely you are to like it, from what you said at places your taste never learned (Yours only); null for General, for a taste not yet calibrated, and at a place your taste learned from.",
+            "title": "Probability"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "path",
+          "content_key",
+          "location",
+          "captured_at",
+          "score"
+        ],
+        "title": "Pick",
+        "type": "object"
+      },
+      "ReadingPart": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "text"
+        ],
+        "title": "ReadingPart",
+        "type": "object"
+      },
+      "ReadingResponse": {
+        "properties": {
+          "parts": {
+            "items": {
+              "$ref": "#/components/schemas/ReadingPart"
+            },
+            "title": "Parts",
+            "type": "array"
+          },
+          "used": {
+            "title": "Used",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "used",
+          "parts"
+        ],
+        "title": "ReadingResponse",
+        "type": "object"
+      },
+      "RootFolder": {
+        "properties": {
+          "mounted": {
+            "title": "Mounted",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "path",
+          "mounted"
+        ],
+        "title": "RootFolder",
+        "type": "object"
+      },
+      "RunDetail": {
+        "properties": {
+          "feedback": {
+            "additionalProperties": {
+              "enum": [
+                -1,
+                1
+              ],
+              "type": "integer"
+            },
+            "title": "Feedback",
+            "type": "object"
+          },
+          "reference_label": {
+            "title": "Reference Label",
+            "type": "string"
+          },
+          "result": {
+            "$ref": "#/components/schemas/SelectionResult"
+          },
+          "task_title": {
+            "title": "Task Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result",
+          "task_title",
+          "reference_label",
+          "feedback"
+        ],
+        "title": "RunDetail",
+        "type": "object"
+      },
+      "RunListItem": {
+        "properties": {
+          "cover_keys": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Cover Keys",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "criteria": {
+            "title": "Criteria",
+            "type": "string"
+          },
+          "groups": {
+            "title": "Groups",
+            "type": "integer"
+          },
+          "picks": {
+            "title": "Picks",
+            "type": "integer"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "task_title": {
+            "title": "Task Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "run_id",
+          "created_at",
+          "task",
+          "task_title",
+          "criteria",
+          "groups",
+          "picks",
+          "cover_keys"
+        ],
+        "title": "RunListItem",
+        "type": "object"
+      },
+      "SelectionRequest": {
+        "additionalProperties": false,
+        "description": "What the user asked for. Identical for every entry point (CLI, web, Python).",
+        "properties": {
+          "criteria": {
+            "default": "",
+            "description": "Free-text description of what to look for (at most 500 characters).",
+            "title": "Criteria",
+            "type": "string"
+          },
+          "describe_weight": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The description's share of each photo's score, from 0 (ignored) to 1 (all that counts); unset means the task's own default.",
+            "title": "Describe Weight"
+          },
+          "examples": {
+            "default": [],
+            "description": "Photos in your collections that show what you mean: part of the description, left out of the results.",
+            "items": {
+              "format": "path",
+              "type": "string"
+            },
+            "title": "Examples",
+            "type": "array"
+          },
+          "folders": {
+            "description": "The pool: every catalogued photo under any of these folders.",
+            "items": {
+              "format": "path",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Folders",
+            "type": "array"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "maximum": 500,
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "How many results to return; unset means the task's own default.",
+            "title": "Limit"
+          },
+          "only_clear_matches": {
+            "default": false,
+            "description": "Consider only photos that clearly match the criteria. If none do, all photos are considered and the run says so.",
+            "title": "Only Clear Matches",
+            "type": "boolean"
+          },
+          "options": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "description": "Task-specific options, validated by the task.",
+            "title": "Options",
+            "type": "object"
+          },
+          "references": {
+            "default": [],
+            "description": "Reference images; need not be in the catalog.",
+            "items": {
+              "format": "path",
+              "type": "string"
+            },
+            "title": "References",
+            "type": "array"
+          },
+          "task": {
+            "description": "Registered task name, e.g. 'best' or 'triptych'.",
+            "title": "Task",
+            "type": "string"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "enum": [
+                  "general",
+                  "yours"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Whose taste ranks photos: 'general' (the zero-shot aesthetic) or 'yours' (learned from your ratings); unset means the template in calico.toml.",
+            "title": "Template"
+          }
+        },
+        "required": [
+          "task",
+          "folders"
+        ],
+        "title": "SelectionRequest",
+        "type": "object"
+      },
+      "SelectionResult": {
+        "additionalProperties": false,
+        "description": "Everything a request produced. Also the payload of a saved run.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "example_keys": {
+            "default": [],
+            "description": "Content keys of the request's examples, in the same order.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Example Keys",
+            "type": "array"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/Group"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "notes": {
+            "default": [],
+            "description": "Things the user should know: fallbacks, skipped files.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "request": {
+            "$ref": "#/components/schemas/SelectionRequest"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          },
+          "stages": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/StageStat"
+            },
+            "title": "Stages",
+            "type": "array"
+          },
+          "versions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "calico + every extractor/model version used.",
+            "title": "Versions",
+            "type": "object"
+          }
+        },
+        "required": [
+          "run_id",
+          "created_at",
+          "request",
+          "groups"
+        ],
+        "title": "SelectionResult",
+        "type": "object"
+      },
+      "StageStat": {
+        "additionalProperties": false,
+        "description": "How one pipeline stage changed the candidate count, and how long it took.",
+        "properties": {
+          "count_in": {
+            "title": "Count In",
+            "type": "integer"
+          },
+          "count_out": {
+            "title": "Count Out",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "count_in",
+          "count_out",
+          "seconds"
+        ],
+        "title": "StageStat",
+        "type": "object"
+      },
+      "StoryBody": {
+        "properties": {
+          "doesnt_fit": {
+            "default": [],
+            "description": "Content keys of the story's photos that do not fit it.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Doesnt Fit",
+            "type": "array"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "enum": [
+                  0,
+                  1,
+                  2
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "StoryBody",
+        "type": "object"
+      },
+      "StoryPhotoItem": {
+        "properties": {
+          "content_key": {
+            "title": "Content Key",
+            "type": "string"
+          },
+          "fits": {
+            "title": "Fits",
+            "type": "boolean"
+          },
+          "folder": {
+            "title": "Folder",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "content_key",
+          "name",
+          "folder",
+          "fits"
+        ],
+        "title": "StoryPhotoItem",
+        "type": "object"
+      },
+      "TaskInfo": {
+        "properties": {
+          "default_describe_weight": {
+            "title": "Default Describe Weight",
+            "type": "number"
+          },
+          "default_limit": {
+            "title": "Default Limit",
+            "type": "integer"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "options_schema": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "Options Schema",
+            "type": "object"
+          },
+          "reference_help": {
+            "title": "Reference Help",
+            "type": "string"
+          },
+          "reference_label": {
+            "title": "Reference Label",
+            "type": "string"
+          },
+          "reference_use": {
+            "enum": [
+              "required",
+              "optional",
+              "unused"
+            ],
+            "title": "Reference Use",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "uses_taste": {
+            "title": "Uses Taste",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "title",
+          "description",
+          "reference_use",
+          "reference_label",
+          "reference_help",
+          "default_limit",
+          "default_describe_weight",
+          "uses_taste",
+          "options_schema"
+        ],
+        "title": "TaskInfo",
+        "type": "object"
+      },
+      "TasteInfo": {
+        "properties": {
+          "default": {
+            "enum": [
+              "general",
+              "yours"
+            ],
+            "title": "Default",
+            "type": "string"
+          },
+          "trained": {
+            "title": "Trained",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "default",
+          "trained"
+        ],
+        "title": "TasteInfo",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "Calico",
+    "version": "1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/feedback": {
+      "post": {
+        "operationId": "api_feedback_api_feedback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Feedback"
+      }
+    },
+    "/api/folders": {
+      "get": {
+        "operationId": "api_folders_api_folders_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "path",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Path"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "items": {
+                        "$ref": "#/components/schemas/RootFolder"
+                      },
+                      "type": "array"
+                    },
+                    {
+                      "items": {
+                        "$ref": "#/components/schemas/ChildFolder"
+                      },
+                      "type": "array"
+                    }
+                  ],
+                  "title": "Response Api Folders Api Folders Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Folders"
+      }
+    },
+    "/api/folders/search": {
+      "get": {
+        "description": "Every folder whose name contains ``q``, in every mounted collection, so a\nsearch such as \"state hospital\" can tick all its sites at once.",
+        "operationId": "api_folder_search_api_folders_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FolderMatch"
+                  },
+                  "title": "Response Api Folder Search Api Folders Search Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Folder Search"
+      }
+    },
+    "/api/health": {
+      "get": {
+        "operationId": "api_health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Health"
+      }
+    },
+    "/api/jobs/{job_id}": {
+      "get": {
+        "operationId": "api_job_api_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Job"
+      }
+    },
+    "/api/label-sets": {
+      "get": {
+        "operationId": "api_label_sets_api_label_sets_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LabelSetSummary"
+                  },
+                  "title": "Response Api Label Sets Api Label Sets Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Label Sets"
+      },
+      "post": {
+        "operationId": "api_new_label_set_api_label_sets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabelSetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobCreated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api New Label Set"
+      }
+    },
+    "/api/label-sets/{set_id}": {
+      "delete": {
+        "description": "Moved to the labels' trash; a set this Calico cannot read can be deleted too.",
+        "operationId": "api_delete_label_set_api_label_sets__set_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "title": "Set Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Delete Label Set"
+      },
+      "get": {
+        "operationId": "api_label_set_api_label_sets__set_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "title": "Set Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LabelSetDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Label Set"
+      }
+    },
+    "/api/label-sets/{set_id}/image/{content_key}": {
+      "get": {
+        "operationId": "label_image_api_label_sets__set_id__image__content_key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "title": "Set Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "content_key",
+            "required": true,
+            "schema": {
+              "title": "Content Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Label Image"
+      }
+    },
+    "/api/label-sets/{set_id}/labels/{content_key}": {
+      "put": {
+        "operationId": "api_set_label_api_label_sets__set_id__labels__content_key__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "title": "Set Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "content_key",
+            "required": true,
+            "schema": {
+              "title": "Content Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabelBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Set Label"
+      }
+    },
+    "/api/label-sets/{set_id}/reference": {
+      "get": {
+        "operationId": "label_reference_api_label_sets__set_id__reference_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "title": "Set Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Label Reference"
+      }
+    },
+    "/api/label-sets/{set_id}/stories/{index}": {
+      "put": {
+        "operationId": "api_set_story_api_label_sets__set_id__stories__index__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "title": "Set Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "title": "Index",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StoryBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Set Story"
+      }
+    },
+    "/api/reading": {
+      "get": {
+        "description": "How \"Describe it\" will read ``text`` for these folders (shown as you type).",
+        "operationId": "api_reading_api_reading_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "text",
+            "required": true,
+            "schema": {
+              "title": "Text",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "folders",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "path",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Folders"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Reading"
+      }
+    },
+    "/api/runs": {
+      "get": {
+        "operationId": "api_runs_api_runs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RunListItem"
+                  },
+                  "title": "Response Api Runs Api Runs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Runs"
+      }
+    },
+    "/api/runs/{run_id}": {
+      "get": {
+        "operationId": "api_run_api_runs__run_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Run"
+      }
+    },
+    "/api/select": {
+      "post": {
+        "operationId": "api_select_api_select_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_api_select_api_select_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobCreated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Api Select"
+      }
+    },
+    "/api/tasks": {
+      "get": {
+        "operationId": "api_tasks_api_tasks_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TaskInfo"
+                  },
+                  "title": "Response Api Tasks Api Tasks Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Tasks"
+      }
+    },
+    "/api/taste": {
+      "get": {
+        "operationId": "api_taste_api_taste_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TasteInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Api Taste"
+      }
+    },
+    "/runs/{run_id}/image/{content_key}": {
+      "get": {
+        "operationId": "run_image_runs__run_id__image__content_key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "content_key",
+            "required": true,
+            "schema": {
+              "title": "Content Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Image"
+      }
+    },
+    "/runs/{run_id}/reference/{index}": {
+      "get": {
+        "operationId": "run_reference_runs__run_id__reference__index__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "title": "Run Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "index",
+            "required": true,
+            "schema": {
+              "title": "Index",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Run Reference"
+      }
+    },
+    "/thumbs/{content_key}": {
+      "get": {
+        "operationId": "thumb_thumbs__content_key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "content_key",
+            "required": true,
+            "schema": {
+              "title": "Content Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Thumb"
+      }
+    }
+  }
+}

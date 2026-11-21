@@ -1,0 +1,11 @@
+track = "strongest-yours"
+name = "y-q0"
+task = "best"
+template = "yours"
+
+[options]
+quality_weight = 0.0
+aesthetic_weight = 1.0
+
+[taste]
+l2 = 1000.0

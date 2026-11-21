@@ -1,0 +1,6 @@
+#!/bin/sh
+# Refuse a commit message that carries a real path, a content key, an email or a private word.
+set -e
+root="$(git rev-parse --show-toplevel)"
+[ "$(basename "$(git rev-parse --absolute-git-dir)")" = .private.git ] && exit 0
+exec uv run --no-sync --project "$root" python "$root/scripts/public_check.py" message "$1"

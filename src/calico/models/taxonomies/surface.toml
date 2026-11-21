@@ -1,0 +1,42 @@
+# What the surfaces in a photo are made of, and how they have aged. Used by the
+# triptych "surface" connection (two photos connect when their distributions over
+# these labels are similar). `plain` is where a photo with no telling surface goes,
+# so it is not spread across the materials. Checked by eye with CLIP, top 8 of 4,000
+# EXPLORE photos per label (October 2026): 6-8 right for each (docs/features.md).
+description = "Surfaces: materials and how they have aged"
+version = "1"
+
+[labels.peeling_paint]
+prompts = ["a close-up of paint peeling off a wall", "flaking, curling layers of old paint"]
+
+# Worded for cracked plaster, these find fallen plaster and collapsed ceilings;
+# "a web of cracks" found shattered glass instead.
+[labels.fallen_plaster]
+prompts = ["cracked, crumbling plaster", "a wall with plaster falling away"]
+
+[labels.exposed_brick]
+prompts = ["exposed brick", "a bare brick wall"]
+
+[labels.wallpaper]
+prompts = ["patterned wallpaper", "old wallpaper on a wall"]
+
+[labels.tile]
+prompts = ["ceramic tile", "a tiled wall or floor"]
+
+[labels.rust]
+prompts = ["rusted metal", "corroded, rusty iron"]
+
+[labels.wood_panelling]
+prompts = ["wood panelling", "wooden boards and woodwork"]
+
+[labels.concrete]
+prompts = ["bare concrete", "a raw concrete wall and floor"]
+
+[labels.overgrowth]
+prompts = ["plants and moss growing indoors", "a ruin overgrown with vegetation"]
+
+[labels.graffiti]
+prompts = ["graffiti on a wall", "spray-painted tags and murals"]
+
+[labels.plain]
+prompts = ["a smooth, plainly painted wall", "a clean, ordinary surface"]

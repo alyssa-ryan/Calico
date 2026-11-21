@@ -1,0 +1,47 @@
+# What role a photograph plays in a sequence. Labels are sub-models: `rollup`
+# merges "establishing:*" into "establishing" when a task wants the coarse kind.
+#
+# Kind is about what the photo is *about*, not the focal length: a whole
+# staircase is establishing even from close up; one baluster is detail.
+description = "Kind of image: establishing, detail, or portrait"
+version = "1"
+
+[labels."establishing:exterior"]
+prompts = [
+    "a wide establishing shot of a building exterior",
+    "a wide view of a landscape or skyline",
+    "an aerial view of a site",
+    "a photo showing a whole building and its surroundings",
+]
+
+[labels."establishing:interior"]
+prompts = [
+    "a wide shot of an entire room",
+    "a photo looking down a long hallway",
+    "a view of a whole staircase",
+    "an interior photo showing the full space",
+]
+
+[labels."detail:object"]
+prompts = [
+    "a close-up photo of a single object",
+    "a detail shot of part of a larger structure",
+    "a close-up of a door handle, sign, or fixture",
+    "a photo focused on one small object",
+]
+
+[labels."detail:texture"]
+prompts = [
+    "a macro photo of a surface texture",
+    "an extreme close-up of peeling paint",
+    "a close-up of rust, moss, or cracked material",
+    "an abstract close-up of a pattern",
+]
+
+[labels."portrait"]
+prompts = [
+    "a portrait of a person",
+    "a photo of a person as the main subject",
+    "a photo of a person posing",
+    "a photo of people looking at the camera",
+]

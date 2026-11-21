@@ -1,0 +1,27 @@
+#!/bin/sh
+# The private material goes only to a *-private repository and the public code never does;
+# every commit pushed to a public one is checked whole.
+set -e
+url="$2"
+root="$(git rev-parse --show-toplevel)"
+case "$url" in
+  *-private | *-private.git | *-private/) to_private=yes ;;
+  *) to_private=no ;;
+esac
+if [ "$(basename "$(git rev-parse --absolute-git-dir)")" = .private.git ]; then
+  if [ "$to_private" = no ]; then
+    echo "refused: the private material is pushed only to a *-private repository, not $url" >&2
+    exit 1
+  fi
+  exit 0
+fi
+if [ "$to_private" = yes ]; then
+  echo "refused: this is the public repository; $url is the private one" >&2
+  exit 1
+fi
+status=0
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ "$local_sha" = 0000000000000000000000000000000000000000 ] && continue
+  uv run --no-sync --project "$root" python "$root/scripts/public_check.py" push "$local_sha" "$remote_sha" || status=1
+done
+exit $status

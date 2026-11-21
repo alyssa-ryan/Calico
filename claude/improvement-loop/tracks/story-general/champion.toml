@@ -1,0 +1,6 @@
+track = "story-general"
+name = "sg0"
+task = "triptych"
+template = "general"
+
+[options]

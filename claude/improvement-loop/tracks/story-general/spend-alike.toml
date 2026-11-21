@@ -1,0 +1,7 @@
+track = "story-general"
+name = "sg1"
+task = "triptych"
+template = "general"
+
+[options]
+spend_alike = 0.871

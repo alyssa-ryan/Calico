@@ -1,0 +1,10 @@
+track = "strongest-yours"
+name = "y-laion-l3000"
+task = "best"
+template = "yours"
+
+[options]
+
+[taste]
+l2 = 3000.0
+offset = "laion"

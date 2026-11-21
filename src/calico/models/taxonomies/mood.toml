@@ -1,0 +1,52 @@
+# Lighting, mood and tone. Used by the triptych "mood" connection: two photos
+# connect when their distributions over these labels are similar.
+description = "Light, mood and tone"
+version = "1"
+
+[labels.soft_light]
+prompts = [
+    "a photo in soft, diffuse window light",
+    "a gently lit scene with soft shadows",
+]
+
+[labels.harsh_sun]
+prompts = [
+    "a photo in harsh direct sunlight with hard shadows",
+    "a high-contrast scene in bright midday sun",
+]
+
+[labels.golden_hour]
+prompts = [
+    "a photo in warm golden-hour light",
+    "a scene lit by a low, warm sun",
+]
+
+[labels.dark_moody]
+prompts = [
+    "a dark, moody, low-key photo",
+    "a dim scene with deep shadows",
+]
+
+[labels.bright_airy]
+prompts = [
+    "a bright, airy, high-key photo",
+    "a light-filled scene with pale tones",
+]
+
+[labels.overcast_cool]
+prompts = [
+    "a photo on a grey overcast day",
+    "a cool, muted, flat-lit scene",
+]
+
+[labels.night]
+prompts = [
+    "a photo taken at night",
+    "a scene lit by artificial light in the dark",
+]
+
+[labels.haze]
+prompts = [
+    "a foggy, hazy, atmospheric photo",
+    "a scene with mist and light beams",
+]

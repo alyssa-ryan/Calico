@@ -135,6 +135,7 @@ def test_libraries_that_change_computed_features_come_in_their_own_pull_request(
     assert list(kinds)[:2] == ["features", "features-security"]
     assert "applies-to: version-updates" in kinds["features"]
     assert "applies-to: security-updates" in kinds["features-security"]
+    assert 'update-types: ["minor", "patch"]' in kinds["features-security"]
     packages = (
         "torch",
         "open-clip-torch",

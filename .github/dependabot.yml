@@ -28,6 +28,7 @@ updates:
       features-security:
         applies-to: security-updates
         patterns: ["torch", "open-clip-torch", "timm", "transformers", "rawpy", "pillow", "pillow-heif"]
+        update-types: ["minor", "patch"]
       python:
         applies-to: version-updates
         patterns: ["*"]

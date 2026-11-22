@@ -36,6 +36,8 @@ _spec.loader.exec_module(check)
         "claude/improvement-loop/reports/x/dev/r.json",
         "claude/improvement-loop/ledger/ledger.jsonl",
         "claude/improvement-loop/phase1/sameness.py",
+        "claude/improvement-loop/reviews/story-notes.txt",
+        ".github/workflows/private.yml",
         "out/2026-11-20-report.json",
         "ratings.csv",
         "photos/IMG_0001.JPG",
@@ -133,6 +135,15 @@ def test_this_tree_holds_nothing_private() -> None:
         + check.content_problems(name, (ROOT / name).read_bytes(), None)
     ]
     assert problems == []
+
+
+def test_the_private_overlays_workflow_is_ignored_here() -> None:
+    ignored = subprocess.run(
+        ["git", "check-ignore", "--no-index", "-q", ".github/workflows/private.yml"],  # noqa: S607
+        cwd=ROOT,
+        check=False,
+    )
+    assert ignored.returncode == 0
 
 
 def test_the_hooks_are_what_make_setup_switches_on() -> None:

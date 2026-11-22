@@ -4,6 +4,7 @@ every pull request, and nothing else: no self-hosted runner and no deploy (decis
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
@@ -26,7 +27,14 @@ def jobs(text: str) -> dict[str, str]:
 
 
 def test_ci_is_the_only_workflow() -> None:
-    assert [w.name for w in WORKFLOWS.glob("*.y*ml")] == ["ci.yml"]
+    tracked = subprocess.run(
+        ["git", "ls-files", "--", ".github/workflows"],  # noqa: S607
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+    assert tracked == [".github/workflows/ci.yml"]
 
 
 def test_ci_runs_for_pushes_to_main_and_for_pull_requests() -> None:

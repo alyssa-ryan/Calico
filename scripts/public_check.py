@@ -38,6 +38,8 @@ PRIVATE = (
     "claude/improvement-loop/reports/*",
     "claude/improvement-loop/ledger/*",
     "claude/improvement-loop/phase*",
+    "claude/improvement-loop/reviews/*",
+    ".github/workflows/private.yml",
     ".loop/*",
     "out/*",
     ".env",

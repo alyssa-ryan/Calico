@@ -180,8 +180,9 @@ def test_a_new_branch_is_checked_for_what_it_adds_not_for_what_is_already_public
     assert "no-reply" in found[0]
 
 
+@pytest.mark.parametrize("other", ["fork", "origin/private"])
 def test_a_commit_already_on_another_remote_is_still_checked_for_this_one(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, other: str
 ) -> None:
     public, fork, repo = tmp_path / "public.git", tmp_path / "fork.git", tmp_path / "repo"
     for bare in (public, fork):
@@ -189,15 +190,65 @@ def test_a_commit_already_on_another_remote_is_still_checked_for_this_one(
     _git(tmp_path, "init", "-q", "-b", "main", str(repo))
     _git(repo, "commit", "-q", "--allow-empty", "-m", "public already")
     _git(repo, "remote", "add", "origin", str(public))
-    _git(repo, "remote", "add", "fork", str(fork))
+    _git(repo, "remote", "add", other, str(fork))
     _git(repo, "push", "-q", "origin", "main")
     _git(repo, "switch", "-q", "-c", "work")
-    _git(repo, "commit", "-q", "--allow-empty", "-m", "only on the fork\n\n" + _signed("me"))
-    _git(repo, "push", "-q", "fork", "work")
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "only elsewhere\n\n" + _signed("me"))
+    _git(repo, "push", "-q", other, "work")
     monkeypatch.setattr(check, "ROOT", repo)
     monkeypatch.setattr(check, "DENYLIST", tmp_path / "none.txt")
     head = _git(repo, "rev-parse", "HEAD")
-    assert check.push(head, check.ZERO, "fork") == []
+    assert check.push(head, check.ZERO, other) == []
     found = check.push(head, check.ZERO, "origin")
     assert len(found) == 1
     assert "no-reply" in found[0]
+
+
+@pytest.mark.parametrize("new_branch", [True, False])
+def test_a_private_file_added_and_then_deleted_is_still_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, new_branch: bool
+) -> None:
+    remote, repo = tmp_path / "remote.git", tmp_path / "repo"
+    _git(tmp_path, "init", "-q", "--bare", str(remote))
+    _git(tmp_path, "init", "-q", "-b", "main", str(repo))
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "public already")
+    _git(repo, "remote", "add", "origin", str(remote))
+    _git(repo, "push", "-q", "origin", "main")
+    base = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "switch", "-q", "-c", "work")
+    (repo / "out").mkdir()
+    (repo / "out" / "notes.txt").write_text("private\n")
+    _git(repo, "add", "out/notes.txt")
+    _git(repo, "commit", "-q", "-m", "add")
+    _git(repo, "rm", "-q", "out/notes.txt")
+    _git(repo, "commit", "-q", "-m", "delete")
+    monkeypatch.setattr(check, "ROOT", repo)
+    monkeypatch.setattr(check, "DENYLIST", tmp_path / "none.txt")
+    found = check.push(
+        _git(repo, "rev-parse", "HEAD"), check.ZERO if new_branch else base, "origin"
+    )
+    assert len(found) == 1
+    assert found[0].startswith("out/notes.txt")
+
+
+def test_a_private_file_a_merge_adds_on_its_own_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo = tmp_path / "repo"
+    _git(tmp_path, "init", "-q", "-b", "main", str(repo))
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "start")
+    _git(repo, "switch", "-q", "-c", "side")
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "side")
+    _git(repo, "switch", "-q", "main")
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "main")
+    _git(repo, "merge", "-q", "--no-commit", "side")
+    (repo / ".env").write_text("SECRET=1\n")
+    _git(repo, "add", ".env")
+    _git(repo, "commit", "-q", "-m", "merge")
+    _git(repo, "rm", "-q", ".env")
+    _git(repo, "commit", "-q", "-m", "delete")
+    monkeypatch.setattr(check, "ROOT", repo)
+    monkeypatch.setattr(check, "DENYLIST", tmp_path / "none.txt")
+    found = check.push(_git(repo, "rev-parse", "HEAD"), check.ZERO, "origin")
+    assert len(found) == 1
+    assert found[0].startswith(".env")

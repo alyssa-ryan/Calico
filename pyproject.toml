@@ -85,7 +85,7 @@ raw = ["calico[raw]"]
 default-groups = ["dev", "ml", "raw"]
 
 [build-system]
-requires = ["hatchling>=1.26"]
+requires = ["hatchling>=1.33.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]

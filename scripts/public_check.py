@@ -2,7 +2,9 @@
 
     public_check.py staged             the files a commit is about to record
     public_check.py message FILE       a commit message
-    public_check.py push LOCAL REMOTE  every commit a push sends: its tree, message and emails
+    public_check.py push LOCAL REMOTE NAME
+                                       every commit a push to the remote NAME sends: its tree,
+                                       message and emails
 
 Refuses private paths, photos and data files, files over 1 MB, real volume and home
 paths, content keys, emails that are not no-reply addresses and, when the private material
@@ -38,6 +40,7 @@ PRIVATE = (
     "claude/improvement-loop/reports/*",
     "claude/improvement-loop/ledger/*",
     "claude/improvement-loop/phase*",
+    "claude/improvement-loop/reviews/*",
     ".loop/*",
     "out/*",
     ".env",
@@ -139,9 +142,11 @@ def message(path: str) -> list[str]:
     return text_problems("commit message", text, load_deny(), keys=True)
 
 
-def push(local: str, remote: str) -> list[str]:
+def push(local: str, remote: str, remote_name: str) -> list[str]:
     deny = load_deny()
-    span = [local, "--not", "--remotes"] if remote == ZERO else [f"{remote}..{local}"]
+    span = (
+        [local, "--not", f"--remotes={remote_name}"] if remote == ZERO else [f"{remote}..{local}"]
+    )
     problems: list[str] = []
     for sha in git("rev-list", *span).decode().split():
         short = sha[:7]
@@ -165,8 +170,8 @@ def main(argv: list[str]) -> int:
         problems = staged()
     elif argv[:1] == ["message"] and len(argv) == 2:
         problems = message(argv[1])
-    elif argv[:1] == ["push"] and len(argv) == 3:
-        problems = push(argv[1], argv[2])
+    elif argv[:1] == ["push"] and len(argv) == 4:
+        problems = push(argv[1], argv[2], argv[3])
     else:
         sys.stderr.write(__doc__ or "")
         return 2

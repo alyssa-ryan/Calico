@@ -36,6 +36,7 @@ _spec.loader.exec_module(check)
         "claude/improvement-loop/reports/x/dev/r.json",
         "claude/improvement-loop/ledger/ledger.jsonl",
         "claude/improvement-loop/phase1/sameness.py",
+        "claude/improvement-loop/reviews/story-notes.txt",
         "out/2026-11-20-report.json",
         "ratings.csv",
         "photos/IMG_0001.JPG",
@@ -144,6 +145,7 @@ def test_the_hooks_are_what_make_setup_switches_on() -> None:
 
 def _git(repo: Path, *args: str) -> str:
     who = ["-c", "user.name=t", "-c", "user.email=t@users.noreply.github.com"]
+    who += ["-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null"]
     done = subprocess.run(  # noqa: S603
         ["git", *who, *args],  # noqa: S607
         cwd=repo,
@@ -171,8 +173,31 @@ def test_a_new_branch_is_checked_for_what_it_adds_not_for_what_is_already_public
     _git(repo, "commit", "-q", "--allow-empty", "-m", "new and clean")
     monkeypatch.setattr(check, "ROOT", repo)
     monkeypatch.setattr(check, "DENYLIST", tmp_path / "none.txt")
-    assert check.push(_git(repo, "rev-parse", "HEAD"), check.ZERO) == []
+    assert check.push(_git(repo, "rev-parse", "HEAD"), check.ZERO, "origin") == []
     _git(repo, "commit", "-q", "--allow-empty", "-m", "new\n\n" + _signed("me"))
-    found = check.push(_git(repo, "rev-parse", "HEAD"), check.ZERO)
+    found = check.push(_git(repo, "rev-parse", "HEAD"), check.ZERO, "origin")
+    assert len(found) == 1
+    assert "no-reply" in found[0]
+
+
+def test_a_commit_already_on_another_remote_is_still_checked_for_this_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    public, fork, repo = tmp_path / "public.git", tmp_path / "fork.git", tmp_path / "repo"
+    for bare in (public, fork):
+        _git(tmp_path, "init", "-q", "--bare", str(bare))
+    _git(tmp_path, "init", "-q", "-b", "main", str(repo))
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "public already")
+    _git(repo, "remote", "add", "origin", str(public))
+    _git(repo, "remote", "add", "fork", str(fork))
+    _git(repo, "push", "-q", "origin", "main")
+    _git(repo, "switch", "-q", "-c", "work")
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "only on the fork\n\n" + _signed("me"))
+    _git(repo, "push", "-q", "fork", "work")
+    monkeypatch.setattr(check, "ROOT", repo)
+    monkeypatch.setattr(check, "DENYLIST", tmp_path / "none.txt")
+    head = _git(repo, "rev-parse", "HEAD")
+    assert check.push(head, check.ZERO, "fork") == []
+    found = check.push(head, check.ZERO, "origin")
     assert len(found) == 1
     assert "no-reply" in found[0]

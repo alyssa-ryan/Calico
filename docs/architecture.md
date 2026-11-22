@@ -873,7 +873,8 @@ writes `.calico-sandbox`), never a folder holding the calico home or a collectio
 
 `.github/workflows/ci.yml` runs `make check` on GitHub's hosted runners, `ubuntu-latest` and
 `macos-latest` (where the tests of decomposed (NFD) names and of case run), for every push to
-`main` and every pull request. It reads the repository only; there is no self-hosted runner
+a branch and every pull request; Dependabot's branches run it through their pull requests
+only. It reads the repository only; there is no self-hosted runner
 and no deploy step (`tests/test_workflows.py`). Readers skip what an older version cannot
 parse (`RunStore.recent`, `LabelStore.all`), and catalog migrations only add, so going back
 to an earlier version never breaks on data a newer one wrote.

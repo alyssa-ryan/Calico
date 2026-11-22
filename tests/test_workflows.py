@@ -9,6 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 CI = WORKFLOWS / "ci.yml"
+DEPENDABOT = ROOT / ".github" / "dependabot.yml"
 
 
 def triggers(text: str) -> dict[str, str]:
@@ -29,10 +30,10 @@ def test_ci_is_the_only_workflow() -> None:
     assert [w.name for w in WORKFLOWS.glob("*.y*ml")] == ["ci.yml"]
 
 
-def test_ci_runs_for_pushes_to_every_branch_and_for_pull_requests() -> None:
+def test_ci_runs_for_pushes_to_every_branch_but_dependabots_and_for_pull_requests() -> None:
     on = triggers(CI.read_text())
     assert set(on) == {"push", "pull_request"}
-    assert re.search(r'branches: \["\*\*"\]', on["push"])
+    assert re.search(r'branches: \["\*\*", "!dependabot/\*\*"\]', on["push"])
 
 
 def test_ci_runs_only_on_githubs_own_runners_linux_and_macos() -> None:
@@ -93,3 +94,49 @@ def test_macos_runs_the_models_on_the_cpu() -> None:
     """GitHub's macOS runners report a GPU (MPS) whose results are wrong."""
     macos = jobs(CI.read_text())["macos"]
     assert re.search(r"^          CALICO_DEVICE: cpu$", macos, re.MULTILINE)
+
+
+def ecosystems() -> dict[str, str]:
+    text = DEPENDABOT.read_text()
+    parts = re.split(r'^  - package-ecosystem: "([a-z-]+)"\n', text, flags=re.MULTILINE)[1:]
+    return dict(zip(parts[::2], parts[1::2], strict=True))
+
+
+def groups(block: str) -> dict[str, str]:
+    body = block[block.index("    groups:\n") :]
+    parts = re.split(r"^      ([a-z-]+):\n", body, flags=re.MULTILINE)[1:]
+    return dict(zip(parts[::2], parts[1::2], strict=True))
+
+
+def test_dependabot_covers_actions_python_and_the_ui_monthly_after_a_week_of_cooldown() -> None:
+    found = ecosystems()
+    assert set(found) == {"github-actions", "uv", "npm"}
+    for name, block in found.items():
+        assert re.search(r'^      interval: "monthly"$', block, re.MULTILINE), name
+        assert re.search(r"^      default-days: 7$", block, re.MULTILINE), name
+
+
+def test_each_ecosystem_opens_one_pull_request_per_kind_of_update() -> None:
+    found = ecosystems()
+    assert list(groups(found["github-actions"])) == ["actions"]
+    for name, prefix in (("uv", "python"), ("npm", "ui")):
+        kinds = groups(found[name])
+        assert {prefix, f"{prefix}-major", f"{prefix}-security"} <= set(kinds), name
+        assert 'update-types: ["minor", "patch"]' in kinds[prefix], name
+        assert 'update-types: ["major"]' in kinds[f"{prefix}-major"], name
+        assert "applies-to: security-updates" in kinds[f"{prefix}-security"], name
+        assert "update-types" not in kinds[f"{prefix}-security"], name
+
+
+def test_libraries_that_change_computed_features_come_in_their_own_pull_request() -> None:
+    kinds = groups(ecosystems()["uv"])
+    assert next(iter(kinds)) == "features"
+    for package in ("torch", "open-clip-torch", "timm", "transformers", "rawpy"):
+        assert f'"{package}"' in kinds["features"], package
+
+
+def test_majors_that_cannot_be_taken_yet_are_ignored() -> None:
+    found = ecosystems()
+    assert re.search(r'dependency-name: "open-clip-torch"\n\s+versions: \[">=4"\]', found["uv"])
+    assert re.search(r'dependency-name: "typescript"\n\s+versions: \[">=6"\]', found["npm"])
+    assert re.search(r'dependency-name: "@types/node"\n\s+versions: \[">=25"\]', found["npm"])

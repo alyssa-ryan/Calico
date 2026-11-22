@@ -2,7 +2,9 @@
 
     public_check.py staged             the files a commit is about to record
     public_check.py message FILE       a commit message
-    public_check.py push LOCAL REMOTE  every commit a push sends: its tree, message and emails
+    public_check.py push LOCAL REMOTE NAME
+                                       every commit a push to the remote NAME sends: its tree,
+                                       message and emails
 
 Refuses private paths, photos and data files, files over 1 MB, real volume and home
 paths, content keys, emails that are not no-reply addresses and, when the private material
@@ -38,6 +40,7 @@ PRIVATE = (
     "claude/improvement-loop/reports/*",
     "claude/improvement-loop/ledger/*",
     "claude/improvement-loop/phase*",
+    "claude/improvement-loop/reviews/*",
     ".loop/*",
     "out/*",
     ".env",
@@ -139,11 +142,33 @@ def message(path: str) -> list[str]:
     return text_problems("commit message", text, load_deny(), keys=True)
 
 
-def push(local: str, remote: str) -> list[str]:
+def published(remote_name: str) -> list[str]:
+    own = f"refs/remotes/{remote_name}/"
+    keys = subprocess.run(
+        ["git", "config", "--name-only", "--get-regexp", r"^remote\..+\.url$"],  # noqa: S607
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    ).stdout.decode()
+    names = [key[len("remote.") : -len(".url")] for key in keys.split()]
+    longer = [f"refs/remotes/{other}/" for other in names if other.startswith(f"{remote_name}/")]
+    refs = git("for-each-ref", "--format=%(refname)", own).decode().split()
+    return [ref for ref in refs if not any(ref.startswith(o) for o in longer)]
+
+
+def files(rev: str, *, changed: bool) -> list[str]:
+    listing: tuple[str, ...] = ("ls-tree", "-r")
+    if changed:
+        listing = ("diff-tree", "-r", "-c", "--root", "--no-commit-id", "--diff-filter=ACMRT")
+    return list(filter(None, git(*listing, "-z", "--name-only", rev).decode().split("\0")))
+
+
+def push(local: str, remote: str, remote_name: str) -> list[str]:
     deny = load_deny()
-    span = local if remote == ZERO else f"{remote}..{local}"
+    span = [local, "--not", *published(remote_name)] if remote == ZERO else [f"{remote}..{local}"]
+    outgoing = git("rev-list", *span).decode().split()
     problems: list[str] = []
-    for sha in git("rev-list", span).decode().split():
+    for sha in outgoing:
         short = sha[:7]
         info = git("show", "-s", "--format=%ae%n%ce%n%B", sha).decode()
         author, committer, body = info.split("\n", 2)
@@ -153,11 +178,13 @@ def push(local: str, remote: str) -> list[str]:
             if not NO_REPLY.search(email)
         ]
         problems += text_problems(f"commit {short} message", body, deny, keys=True)
-    tree = git("ls-tree", "-r", "-z", "--name-only", local).decode()
-    for name in filter(None, tree.split("\0")):
-        problems += path_problems(name)
-        problems += content_problems(name, git("show", f"{local}:{name}"), deny)
-    return problems
+    sent = [(local, files(local, changed=False))]
+    sent += [(sha, files(sha, changed=True)) for sha in outgoing]
+    for rev, names in sent:
+        for name in names:
+            problems += path_problems(name)
+            problems += content_problems(name, git("show", f"{rev}:{name}"), deny)
+    return list(dict.fromkeys(problems))
 
 
 def main(argv: list[str]) -> int:
@@ -165,8 +192,8 @@ def main(argv: list[str]) -> int:
         problems = staged()
     elif argv[:1] == ["message"] and len(argv) == 2:
         problems = message(argv[1])
-    elif argv[:1] == ["push"] and len(argv) == 3:
-        problems = push(argv[1], argv[2])
+    elif argv[:1] == ["push"] and len(argv) == 4:
+        problems = push(argv[1], argv[2], argv[3])
     else:
         sys.stderr.write(__doc__ or "")
         return 2

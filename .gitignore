@@ -36,6 +36,7 @@ claude/improvement-loop/*.md
 claude/improvement-loop/proposals/
 claude/improvement-loop/splits/
 claude/improvement-loop/reports/
+claude/improvement-loop/reviews/
 claude/improvement-loop/ledger/*
 !claude/improvement-loop/ledger/bars.jsonl
 !claude/improvement-loop/ledger/registrations.jsonl

@@ -25,7 +25,7 @@ dependencies = [
 # Semantic image/text embeddings (CLIP). Heavy (PyTorch), so opt-in:
 #   uv sync --extra ml
 ml = [
-    "open-clip-torch>=2.29",
+    "open-clip-torch>=4.2.2",
     "timm>=1.0",
     "torch>=2.5",
     "transformers>=4.45",

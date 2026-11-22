@@ -103,7 +103,9 @@ def ecosystems() -> dict[str, str]:
 
 
 def groups(block: str) -> dict[str, str]:
-    body = block[block.index("    groups:\n") :]
+    body = block[block.index("    groups:\n") + len("    groups:\n") :]
+    end = re.search(r"^    [a-z-]+:", body, re.MULTILINE)
+    body = body[: end.start()] if end else body
     parts = re.split(r"^      ([a-z-]+):\n", body, flags=re.MULTILINE)[1:]
     return dict(zip(parts[::2], parts[1::2], strict=True))
 
@@ -125,14 +127,26 @@ def test_each_ecosystem_opens_one_pull_request_per_kind_of_update() -> None:
         assert 'update-types: ["minor", "patch"]' in kinds[prefix], name
         assert 'update-types: ["major"]' in kinds[f"{prefix}-major"], name
         assert "applies-to: security-updates" in kinds[f"{prefix}-security"], name
-        assert "update-types" not in kinds[f"{prefix}-security"], name
+        assert 'update-types: ["minor", "patch"]' in kinds[f"{prefix}-security"], name
 
 
 def test_libraries_that_change_computed_features_come_in_their_own_pull_request() -> None:
     kinds = groups(ecosystems()["uv"])
-    assert next(iter(kinds)) == "features"
-    for package in ("torch", "open-clip-torch", "timm", "transformers", "rawpy"):
-        assert f'"{package}"' in kinds["features"], package
+    assert list(kinds)[:2] == ["features", "features-security"]
+    assert "applies-to: version-updates" in kinds["features"]
+    assert "applies-to: security-updates" in kinds["features-security"]
+    packages = (
+        "torch",
+        "open-clip-torch",
+        "timm",
+        "transformers",
+        "rawpy",
+        "pillow",
+        "pillow-heif",
+    )
+    for package in packages:
+        for group in ("features", "features-security"):
+            assert f'"{package}"' in kinds[group], (group, package)
 
 
 def test_majors_that_cannot_be_taken_yet_are_ignored() -> None:

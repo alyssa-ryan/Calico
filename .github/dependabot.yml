@@ -24,7 +24,10 @@ updates:
     groups:
       features:
         applies-to: version-updates
-        patterns: ["torch", "open-clip-torch", "timm", "transformers", "rawpy"]
+        patterns: ["torch", "open-clip-torch", "timm", "transformers", "rawpy", "pillow", "pillow-heif"]
+      features-security:
+        applies-to: security-updates
+        patterns: ["torch", "open-clip-torch", "timm", "transformers", "rawpy", "pillow", "pillow-heif"]
       python:
         applies-to: version-updates
         patterns: ["*"]
@@ -36,6 +39,7 @@ updates:
       python-security:
         applies-to: security-updates
         patterns: ["*"]
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "npm"
     directory: "/frontend"
@@ -61,3 +65,4 @@ updates:
       ui-security:
         applies-to: security-updates
         patterns: ["*"]
+        update-types: ["minor", "patch"]

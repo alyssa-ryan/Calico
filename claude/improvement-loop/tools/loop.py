@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 import guard
 import ledger
 import lock
+import reviews
 from guard import REAL_HOME, REPO, STATE, Refused, git
 
 if TYPE_CHECKING:
@@ -539,9 +540,24 @@ def read_json(path: str) -> dict[str, Any]:
     return data
 
 
+def committed_as_is(path: str) -> bool:
+    public, _ = split_private([path])
+    run = git if public else guard.private_git
+    tracked = run("ls-files", "--", path, check=False).strip()
+    return bool(tracked) and not run("status", "--porcelain", "--", path, check=False).strip()
+
+
 def cmd_register(args: argparse.Namespace) -> int:
+    row = read_json(args.file)
+    review = str(row.get("review", ""))
+    found = REPO / review
+    reviews.refuse_unreviewed(
+        review,
+        found.read_text() if review and found.is_file() else None,
+        committed=bool(review) and committed_as_is(review),
+    )
     with unwritten_if_refused(ledger.REGISTRATIONS):
-        entry = ledger.register(read_json(args.file), head=head())
+        entry = ledger.register(row, head=head())
         commit(
             [rel(ledger.REGISTRATIONS)], f"Loop: register {entry['id']}: {entry['hypothesis'][:60]}"
         )

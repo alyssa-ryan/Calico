@@ -19,6 +19,7 @@ import ledger  # noqa: E402
 import list_answers  # noqa: E402
 import lock  # noqa: E402
 import loop  # noqa: E402
+import reviews  # noqa: E402
 import splits  # noqa: E402
 import summarize  # noqa: E402
 import verdict  # noqa: E402
@@ -48,6 +49,7 @@ def registration(**over: Any) -> dict[str, Any]:
         "worth_building_if": "w",
         "validation_test": "v",
         "pass_rule": "p",
+        "review": "claude/improvement-loop/reviews/r.md",
     }
     return {**row, **over}
 
@@ -1028,3 +1030,69 @@ def test_a_quick_reading_needs_a_dev_ladder_made_with_todays_measures(
     args = loop.parser().parse_args(["quick", "r.json.gz", "--candidate", "c"])
     with pytest.raises(guard.Refused, match="--tier dev"):
         loop.cmd_quick(args)
+
+
+REVIEWED = "Reviewer: plan-critic-stats\n\n1. A finding.\n\nVerdict: PROCEED WITH CHANGES — fix 1\n"
+REVIEW = "claude/improvement-loop/reviews/strongest-general-007.md"
+
+
+def test_a_registration_names_a_committed_review_by_the_statistics_critic() -> None:
+    reviews.refuse_unreviewed(REVIEW, REVIEWED, committed=True)
+    reviews.refuse_unreviewed(REVIEW, REVIEWED.replace(" WITH CHANGES — fix 1", ""), committed=True)
+
+
+@pytest.mark.parametrize(
+    ("path", "text", "committed", "says"),
+    [
+        ("docs/r.md", REVIEWED, True, "reviews/"),
+        (REVIEW, None, True, "does not exist"),
+        (REVIEW, REVIEWED, False, "commit"),
+        (REVIEW, REVIEWED.replace("plan-critic-stats", "plan-critic"), True, "plan-critic-stats"),
+        (REVIEW, REVIEWED.replace("Verdict: PROCEED WITH CHANGES — fix 1", ""), True, "Verdict"),
+        (
+            REVIEW,
+            REVIEWED.replace("PROCEED WITH CHANGES — fix 1", "DO NOT PROCEED — no power"),
+            True,
+            "DO NOT PROCEED",
+        ),
+    ],
+)
+def test_a_registration_without_a_usable_review_is_refused(
+    path: str, text: str | None, committed: bool, says: str
+) -> None:
+    with pytest.raises(guard.Refused, match=says):
+        reviews.refuse_unreviewed(path, text, committed=committed)
+
+
+def test_register_refuses_before_it_writes_a_row(
+    books: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(loop, "REPO", tmp_path)
+    monkeypatch.setattr(loop, "committed_as_is", lambda _: True)
+
+    def committed(*_: object, **__: object) -> str:
+        raise AssertionError("committed")
+
+    monkeypatch.setattr(loop, "commit", committed)
+    asked = tmp_path / "attempt.json"
+    asked.write_text(json.dumps(registration(review=REVIEW)))
+    with pytest.raises(guard.Refused, match="does not exist"):
+        loop.cmd_register(loop.parser().parse_args(["register", str(asked)]))
+    assert ledger.read(ledger.REGISTRATIONS) == []
+
+
+def test_register_keeps_the_review_it_was_given(
+    books: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / REVIEW).parent.mkdir(parents=True)
+    (tmp_path / REVIEW).write_text(REVIEWED)
+    monkeypatch.setattr(loop, "REPO", tmp_path)
+    monkeypatch.setattr(loop, "committed_as_is", lambda _: True)
+    monkeypatch.setattr(loop, "commit", lambda *a, **k: "h")
+    monkeypatch.setattr(loop, "head", lambda: "h")
+    monkeypatch.setattr(loop, "repo_head", lambda _: "h")
+    monkeypatch.setattr(loop, "rel", str)
+    asked = tmp_path / "attempt.json"
+    asked.write_text(json.dumps(registration(review=REVIEW)))
+    loop.cmd_register(loop.parser().parse_args(["register", str(asked)]))
+    assert ledger.read(ledger.REGISTRATIONS)[0]["review"] == REVIEW

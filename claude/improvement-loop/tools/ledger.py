@@ -29,6 +29,7 @@ REGISTER_FIELDS = (
     "worth_building_if",
     "validation_test",
     "pass_rule",
+    "review",
 )
 RECORD_FIELDS = ("id", "quick_result", "built", "validation", "guardrails", "decision", "reason")
 OPTIONAL = ("validation", "guardrails")

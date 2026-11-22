@@ -29,10 +29,10 @@ def test_ci_is_the_only_workflow() -> None:
     assert [w.name for w in WORKFLOWS.glob("*.y*ml")] == ["ci.yml"]
 
 
-def test_ci_runs_for_pushes_to_main_and_for_pull_requests() -> None:
+def test_ci_runs_for_pushes_to_every_branch_and_for_pull_requests() -> None:
     on = triggers(CI.read_text())
     assert set(on) == {"push", "pull_request"}
-    assert re.search(r"branches: \[main\]", on["push"])
+    assert re.search(r'branches: \["\*\*"\]', on["push"])
 
 
 def test_ci_runs_only_on_githubs_own_runners_linux_and_macos() -> None:

@@ -1,0 +1,153 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-GB
+tone_instructions: >-
+  Plain, direct English. Lead with the defect and a concrete failing input or state.
+  Name the CLAUDE.md rule a finding breaks. No praise, no emojis.
+early_access: false
+
+reviews:
+  profile: assertive
+  high_level_summary: true
+  review_status: true
+  commit_status: true
+  fail_commit_status: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  poem: false
+  in_progress_fortune: false
+  suggested_reviewers: false
+  auto_approvals:
+    enabled: false
+  abort_on_close: true
+
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+    base_branches: ["main"]
+    auto_pause_after_reviewed_commits: 0
+
+  path_filters:
+    - "!frontend/src/api/schema.ts"
+    - "!frontend/src/api/fingerprint.ts"
+    - "!frontend/openapi.json"
+    - "!frontend/package-lock.json"
+    - "!uv.lock"
+    - "!tests/features/golden.json"
+
+  path_instructions:
+    - path: "src/calico/**/*.py"
+      instructions: |
+        Calico's rules (CLAUDE.md) apply to every change here:
+        - Typed for mypy --strict; small modules; no commented-out code; no print outside cli.py.
+        - New code carries no rationale in comments or docstrings: flag any added "why" comment or explanatory docstring.
+        - Nothing writes under a collection root (the archive is read-only).
+        - No personal conventions in code: folder naming, vocabulary and thresholds belong in configuration (calico.toml, taxonomies, task options). Flag hard-coded place names, folder words or magic thresholds.
+        - Deterministic: seeded randomness only; ties break by path.
+        - Errors a user can fix are CalicoError subclasses whose message says how to fix them. A fallback or ignored input must call ctx.trace.note(...).
+    - path: "src/calico/tasks/**"
+      instructions: |
+        Tasks and models are pure: they take arrays in a TaskContext or FeatureView and return values. Flag any filesystem, database, network or global state.
+        Selection logic lives only in tasks/ and selection/; flag ranking done anywhere else.
+        Scores are built from Evidence: values in [0, 1], weights summing to 1. Per-photo signals are recorded with ctx.trace.record so `calico runs explain` can answer "why not this one".
+        A model or extractor whose output changes must bump its `version`.
+    - path: "src/calico/selection/**"
+      instructions: |
+        Tasks and models are pure: they take arrays in a TaskContext or FeatureView and return values. Flag any filesystem, database, network or global state.
+        Selection logic lives only in tasks/ and selection/; flag ranking done anywhere else.
+        Scores are built from Evidence: values in [0, 1], weights summing to 1. Per-photo signals are recorded with ctx.trace.record so `calico runs explain` can answer "why not this one".
+        A model or extractor whose output changes must bump its `version`.
+    - path: "src/calico/models/**"
+      instructions: |
+        Tasks and models are pure: they take arrays in a TaskContext or FeatureView and return values. Flag any filesystem, database, network or global state.
+        Selection logic lives only in tasks/ and selection/; flag ranking done anywhere else.
+        Scores are built from Evidence: values in [0, 1], weights summing to 1. Per-photo signals are recorded with ctx.trace.record so `calico runs explain` can answer "why not this one".
+        A model or extractor whose output changes must bump its `version`.
+    - path: "src/calico/features/**"
+      instructions: |
+        Features only decode and compute; I/O beyond decoding belongs in catalog/. An extractor whose output changes must bump its `version` (cached features are keyed by it), and an ML extractor's golden output must be rewritten.
+    - path: "src/calico/cli.py"
+      instructions: |
+        The CLI and web call Engine.select; they never rank anything themselves.
+        A change to an API response model must come with regenerated UI types (`make api-types`); flag a response-model change without changes to frontend/src/api/.
+    - path: "src/calico/web/**"
+      instructions: |
+        The CLI and web call Engine.select; they never rank anything themselves.
+        A change to an API response model must come with regenerated UI types (`make api-types`); flag a response-model change without changes to frontend/src/api/.
+    - path: "frontend/src/**"
+      instructions: |
+        Every user-visible string comes from the API or frontend/src/lib/format.ts. Logic belongs in frontend/src/lib/ (pure and tested). Screens and components need a Vitest test. Everything stays keyboard-accessible and works at 375 px wide.
+    - path: "tests/**"
+      instructions: |
+        Tests come first and every bug fix starts with a test that reproduces it. Test data is built with tests/factories.py (scene, save_jpeg, photo, view, context, FakeModels); flag hand-rolled fixtures that duplicate it. Tests needing PyTorch are marked @pytest.mark.ml. No test may read a real archive or a real calico home. A new skip in CI means raising CALICO_MAX_SKIPPED in the workflow.
+    - path: "claude/improvement-loop/tools/**"
+      instructions: |
+        The improvement loop's tools. verdict.py (what decides a pass), guard.py (what the loop may commit, run and read) and lock.py (which code counts as a measure) change only by the owner's decision: flag any change to them and ask whether the owner approved it. A new candidate option must default to today's behaviour. Flag a change to a function lock.py names in MEASURES_IN_HARNESS, or to summarize.py or calibrate_repeats.py, as a measure change.
+    - path: ".github/workflows/**"
+      instructions: |
+        Third-party actions are pinned to a full commit SHA with the version in a comment. Permissions stay minimal (contents: read unless a job needs more). Checkouts use persist-credentials: false. The required checks are named "Linux check" and "macOS check"; renaming a job breaks branch protection.
+    - path: "**/*.md"
+      instructions: |
+        Public documentation. Use the words of docs/architecture.md's Vocabulary table. Flag any personal name, home or volume path, place name from a photo archive, or content key: those belong only in private material.
+
+  tools:
+    ruff:
+      enabled: true
+    biome:
+      enabled: true
+    actionlint:
+      enabled: true
+    shellcheck:
+      enabled: true
+    gitleaks:
+      enabled: true
+    yamllint:
+      enabled: true
+    github-checks:
+      enabled: true
+    markdownlint:
+      enabled: false
+    languagetool:
+      enabled: false
+
+  finishing_touches:
+    unit_tests:
+      enabled: false
+    autofix:
+      enabled: false
+    fix_ci:
+      enabled: false
+    resolve_merge_conflict:
+      enabled: false
+    simplify:
+      enabled: false
+
+  pre_merge_checks:
+    title:
+      mode: warning
+    description:
+      mode: warning
+    custom_checks:
+      - name: "Pull request kind"
+        mode: warning
+        instructions: |
+          The description must say which kind of finished work this is: a complete feature, a completed fix for an error in the repository, or completed work on an existing feature. A step along the way, a small fix, a planning note or a docs update alone does not qualify for a pull request.
+
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "docs/architecture.md"
+  learnings:
+    scope: local
+  issues:
+    scope: local
+  pull_requests:
+    scope: local
+
+chat:
+  auto_reply: true
+  art: false

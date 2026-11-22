@@ -3,8 +3,9 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
+    cooldown:
+      default-days: 7
     labels: ["dependencies"]
     groups:
       actions:
@@ -13,14 +14,29 @@ updates:
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
+    cooldown:
+      default-days: 7
     labels: ["dependencies"]
+    ignore:
+      - dependency-name: "open-clip-torch"
+        versions: [">=4"]
     groups:
+      features:
+        applies-to: version-updates
+        patterns: ["torch", "open-clip-torch", "timm", "transformers", "rawpy", "pillow", "pillow-heif"]
+      features-security:
+        applies-to: security-updates
+        patterns: ["torch", "open-clip-torch", "timm", "transformers", "rawpy", "pillow", "pillow-heif"]
+        update-types: ["minor", "patch"]
       python:
         applies-to: version-updates
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      python-major:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["major"]
       python-security:
         applies-to: security-updates
         patterns: ["*"]
@@ -29,14 +45,24 @@ updates:
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
-      interval: "weekly"
-      day: "monday"
+      interval: "monthly"
+    cooldown:
+      default-days: 7
     labels: ["dependencies"]
+    ignore:
+      - dependency-name: "typescript"
+        versions: [">=6"]
+      - dependency-name: "@types/node"
+        versions: [">=25"]
     groups:
       ui:
         applies-to: version-updates
         patterns: ["*"]
         update-types: ["minor", "patch"]
+      ui-major:
+        applies-to: version-updates
+        patterns: ["*"]
+        update-types: ["major"]
       ui-security:
         applies-to: security-updates
         patterns: ["*"]

@@ -141,9 +141,9 @@ def message(path: str) -> list[str]:
 
 def push(local: str, remote: str) -> list[str]:
     deny = load_deny()
-    span = local if remote == ZERO else f"{remote}..{local}"
+    span = [local, "--not", "--remotes"] if remote == ZERO else [f"{remote}..{local}"]
     problems: list[str] = []
-    for sha in git("rev-list", span).decode().split():
+    for sha in git("rev-list", *span).decode().split():
         short = sha[:7]
         info = git("show", "-s", "--format=%ae%n%ce%n%B", sha).decode()
         author, committer, body = info.split("\n", 2)

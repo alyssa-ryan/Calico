@@ -140,3 +140,39 @@ def test_the_hooks_are_what_make_setup_switches_on() -> None:
     assert re.search(r"git config core\.hooksPath scripts/git-hooks", makefile)
     for hook in ("pre-commit", "commit-msg", "pre-push"):
         assert (ROOT / "scripts" / "git-hooks" / hook).stat().st_mode & 0o111, hook
+
+
+def _git(repo: Path, *args: str) -> str:
+    who = ["-c", "user.name=t", "-c", "user.email=t@users.noreply.github.com"]
+    done = subprocess.run(  # noqa: S603
+        ["git", *who, *args],  # noqa: S607
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return done.stdout.strip()
+
+
+def _signed(name: str) -> str:
+    return "Signed-off-by: " + name + " <" + name + "@" + "vendor.test>"
+
+
+def test_a_new_branch_is_checked_for_what_it_adds_not_for_what_is_already_public(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    remote, repo = tmp_path / "remote.git", tmp_path / "repo"
+    _git(tmp_path, "init", "-q", "--bare", str(remote))
+    _git(tmp_path, "init", "-q", "-b", "main", str(repo))
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "public already\n\n" + _signed("bot"))
+    _git(repo, "remote", "add", "origin", str(remote))
+    _git(repo, "push", "-q", "origin", "main")
+    _git(repo, "switch", "-q", "-c", "work")
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "new and clean")
+    monkeypatch.setattr(check, "ROOT", repo)
+    monkeypatch.setattr(check, "DENYLIST", tmp_path / "none.txt")
+    assert check.push(_git(repo, "rev-parse", "HEAD"), check.ZERO) == []
+    _git(repo, "commit", "-q", "--allow-empty", "-m", "new\n\n" + _signed("me"))
+    found = check.push(_git(repo, "rev-parse", "HEAD"), check.ZERO)
+    assert len(found) == 1
+    assert "no-reply" in found[0]

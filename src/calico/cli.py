@@ -34,7 +34,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Any, Literal
 
-import click
 import tomli_w
 import typer
 from pydantic import JsonValue, ValidationError
@@ -90,7 +89,6 @@ from calico.evaluation import (
     STORY_L2,
     STORY_TOO_ALIKE,
     STORY_VARIETY_WEIGHTS,
-    TASTE_FITS,
     TODAY,
     WIN_PLACES,
     Disagreement,
@@ -1475,6 +1473,8 @@ def serve_command(
 
 # -- eval ----------------------------------------------------------------------------------
 
+FitChoice = Literal["centred", "offset", "leaning", "by_scale", "top_pairs"]
+
 METRICS = ("precision_at_10", "ndcg_at_10", "auc")
 
 
@@ -2275,9 +2275,8 @@ def eval_taste(  # noqa: PLR0917
         ),
     ] = None,
     technical: Annotated[
-        str | None,
+        Literal["2", "3"] | None,
         typer.Option(
-            click_type=click.Choice(["2", "3"]),
             help="Also measure General's strength with this version of the technical "
             "measures (3: sharpness with the noise taken off), against today's. Computed "
             "for the rated photos alone; the first run reads each one.",
@@ -2292,9 +2291,8 @@ def eval_taste(  # noqa: PLR0917
         ),
     ] = None,
     fit: Annotated[
-        str | None,
+        FitChoice | None,
         typer.Option(
-            click_type=click.Choice(list(TASTE_FITS)),
             help="Also measure Yours fitted this way against today's (centred: each photo "
             "against the mean of every photo at its place; offset: General's view as one more "
             "input, so Yours learns what General misses; measure it at more than one --l2; "
@@ -2383,9 +2381,9 @@ def eval_taste(  # noqa: PLR0917
             l2 or [TASTE_L2],
             only_holdout=holdout,
             quality_weights=quality_weight or None,
-            technical="3" if technical == "3" else "2" if technical else None,
+            technical=technical,
             aesthetic=aesthetic,
-            fit=next((f for f in TASTE_FITS if f == fit), None),
+            fit=fit,
             progress=progress,
             prompts=prompts,
             blend=blend,

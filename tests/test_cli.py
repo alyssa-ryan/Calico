@@ -15,7 +15,7 @@ import threading
 import types
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, get_args
 
 import numpy as np
 import pytest
@@ -2897,3 +2897,7 @@ def test_holdout_draw_can_hold_out_more_places_and_be_previewed_first(
     assert heard[-1] == (8, True)
     assert "Held out 1 place" in drawn.stdout
     assert invoke("holdout", "draw", "--places", "0").exit_code == 2  # at least one
+
+
+def test_eval_taste_offers_every_taste_fit_and_nothing_else() -> None:
+    assert get_args(cli.FitChoice) == evaluation.TASTE_FITS

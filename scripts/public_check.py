@@ -144,11 +144,14 @@ def message(path: str) -> list[str]:
 
 def published(remote_name: str) -> list[str]:
     own = f"refs/remotes/{remote_name}/"
-    longer = [
-        f"refs/remotes/{other}/"
-        for other in git("remote").decode().split()
-        if other.startswith(f"{remote_name}/")
-    ]
+    keys = subprocess.run(
+        ["git", "config", "--name-only", "--get-regexp", r"^remote\..+\.url$"],  # noqa: S607
+        cwd=ROOT,
+        capture_output=True,
+        check=False,
+    ).stdout.decode()
+    names = [key[len("remote.") : -len(".url")] for key in keys.split()]
+    longer = [f"refs/remotes/{other}/" for other in names if other.startswith(f"{remote_name}/")]
     refs = git("for-each-ref", "--format=%(refname)", own).decode().split()
     return [ref for ref in refs if not any(ref.startswith(o) for o in longer)]
 
@@ -156,7 +159,7 @@ def published(remote_name: str) -> list[str]:
 def files(rev: str, *, changed: bool) -> list[str]:
     listing: tuple[str, ...] = ("ls-tree", "-r")
     if changed:
-        listing = ("diff-tree", "-r", "-c", "--root", "--no-commit-id", "--diff-filter=ACMR")
+        listing = ("diff-tree", "-r", "-c", "--root", "--no-commit-id", "--diff-filter=ACMRT")
     return list(filter(None, git(*listing, "-z", "--name-only", rev).decode().split("\0")))
 
 

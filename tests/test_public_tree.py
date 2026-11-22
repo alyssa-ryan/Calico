@@ -185,16 +185,16 @@ def test_a_commit_already_on_another_remote_is_still_checked_for_this_one(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, other: str
 ) -> None:
     public, fork, repo = tmp_path / "public.git", tmp_path / "fork.git", tmp_path / "repo"
-    for bare in (public, fork):
-        _git(tmp_path, "init", "-q", "--bare", str(bare))
+    _git(tmp_path, "init", "-q", "--bare", str(public))
     _git(tmp_path, "init", "-q", "-b", "main", str(repo))
     _git(repo, "commit", "-q", "--allow-empty", "-m", "public already")
     _git(repo, "remote", "add", "origin", str(public))
-    _git(repo, "remote", "add", other, str(fork))
+    _git(repo, "config", f"remote.{other}.url", str(fork))
+    _git(repo, "config", f"remote.{other}.fetch", f"+refs/heads/*:refs/remotes/{other}/*")
     _git(repo, "push", "-q", "origin", "main")
     _git(repo, "switch", "-q", "-c", "work")
     _git(repo, "commit", "-q", "--allow-empty", "-m", "only elsewhere\n\n" + _signed("me"))
-    _git(repo, "push", "-q", other, "work")
+    _git(repo, "update-ref", f"refs/remotes/{other}/work", "HEAD")
     monkeypatch.setattr(check, "ROOT", repo)
     monkeypatch.setattr(check, "DENYLIST", tmp_path / "none.txt")
     head = _git(repo, "rev-parse", "HEAD")
@@ -252,3 +252,28 @@ def test_a_private_file_a_merge_adds_on_its_own_is_refused(
     found = check.push(_git(repo, "rev-parse", "HEAD"), check.ZERO, "origin")
     assert len(found) == 1
     assert found[0].startswith(".env")
+
+
+def test_a_private_file_that_replaces_a_symlink_and_is_then_deleted_is_refused(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    remote, repo = tmp_path / "remote.git", tmp_path / "repo"
+    _git(tmp_path, "init", "-q", "--bare", str(remote))
+    _git(tmp_path, "init", "-q", "-b", "main", str(repo))
+    (repo / "notes.txt").symlink_to("README.md")
+    _git(repo, "add", "notes.txt")
+    _git(repo, "commit", "-q", "-m", "a link")
+    _git(repo, "remote", "add", "origin", str(remote))
+    _git(repo, "push", "-q", "origin", "main")
+    _git(repo, "switch", "-q", "-c", "work")
+    (repo / "notes.txt").unlink()
+    (repo / "notes.txt").write_text("mail someone@" + "gmail.com\n")
+    _git(repo, "add", "notes.txt")
+    _git(repo, "commit", "-q", "-m", "a file")
+    _git(repo, "rm", "-q", "notes.txt")
+    _git(repo, "commit", "-q", "-m", "gone")
+    monkeypatch.setattr(check, "ROOT", repo)
+    monkeypatch.setattr(check, "DENYLIST", tmp_path / "none.txt")
+    found = check.push(_git(repo, "rev-parse", "HEAD"), check.ZERO, "origin")
+    assert len(found) == 1
+    assert "email" in found[0]

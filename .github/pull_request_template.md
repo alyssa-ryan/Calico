@@ -14,8 +14,8 @@
 
 - [ ] Tests written first and seen to fail; every behaviour has a test
 - [ ] `make check` passes locally
-- [ ] `/code-review` and the `code-reviewer` agent, before opening
-- [ ] Measured numbers audited by `stats-reviewer` (or: no measured claim)
+- [ ] `/code-review` and the `code-reviewer` agent (if present locally), before opening
+- [ ] Measured numbers audited by `stats-reviewer`, if present locally (or: no measured claim)
 - [ ] API response models unchanged, or `make api-types` run
 
 ## Review

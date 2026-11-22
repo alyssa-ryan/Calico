@@ -41,7 +41,8 @@ claude/improvement-loop/ledger/*
 !claude/improvement-loop/ledger/bars.jsonl
 !claude/improvement-loop/ledger/registrations.jsonl
 claude/improvement-loop/phase*/
-.github/workflows/private.yml
+.github/workflows/*
+!.github/workflows/ci.yml
 
 # Working copies and files made to be opened
 .loop/

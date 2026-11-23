@@ -37,6 +37,8 @@ _spec.loader.exec_module(check)
         "claude/improvement-loop/ledger/ledger.jsonl",
         "claude/improvement-loop/phase1/sameness.py",
         "claude/improvement-loop/reviews/story-notes.txt",
+        ".github/workflows/nightly.yml",
+        ".github/workflows/other.yaml",
         "out/2026-11-20-report.json",
         "ratings.csv",
         "photos/IMG_0001.JPG",
@@ -55,6 +57,7 @@ def test_private_paths_and_data_files_are_refused(path: str) -> None:
     "path",
     [
         "docs/architecture.md",
+        ".github/workflows/ci.yml",
         "frontend/src/assets/header-960.webp",
         "claude/improvement-loop/ledger/bars.jsonl",
         "claude/improvement-loop/ledger/registrations.jsonl",
@@ -134,6 +137,23 @@ def test_this_tree_holds_nothing_private() -> None:
         + check.content_problems(name, (ROOT / name).read_bytes(), None)
     ]
     assert problems == []
+
+
+@pytest.mark.parametrize(
+    ("path", "ignored"),
+    [
+        (".github/workflows/nightly.yml", True),
+        (".github/workflows/other.yaml", True),
+        (".github/workflows/ci.yml", False),
+    ],
+)
+def test_every_workflow_but_ci_is_ignored_here(path: str, ignored: bool) -> None:
+    found = subprocess.run(  # noqa: S603
+        ["git", "check-ignore", "--no-index", "-q", path],  # noqa: S607
+        cwd=ROOT,
+        check=False,
+    )
+    assert (found.returncode == 0) is ignored
 
 
 def test_the_hooks_are_what_make_setup_switches_on() -> None:

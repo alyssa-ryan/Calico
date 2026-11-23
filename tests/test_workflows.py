@@ -1,9 +1,11 @@
-"""CI runs ``make check`` on GitHub's own Linux and macOS runners, for every push to main and
-every pull request, and nothing else: no self-hosted runner and no deploy (decision 0002)."""
+"""CI runs ``make check`` on GitHub's own Linux and macOS runners, for every push to a branch
+(Dependabot's run through their pull requests) and every pull request, and nothing else: no
+self-hosted runner and no deploy (decision 0002)."""
 
 from __future__ import annotations
 
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
@@ -27,7 +29,22 @@ def jobs(text: str) -> dict[str, str]:
 
 
 def test_ci_is_the_only_workflow() -> None:
-    assert [w.name for w in WORKFLOWS.glob("*.y*ml")] == ["ci.yml"]
+    listed = subprocess.run(
+        [  # noqa: S607
+            "git",
+            "ls-files",
+            "-z",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            ".github/workflows",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split("\0")
+    assert [name for name in listed if name] == [".github/workflows/ci.yml"]
 
 
 def test_ci_runs_for_pushes_to_every_branch_but_dependabots_and_for_pull_requests() -> None:
